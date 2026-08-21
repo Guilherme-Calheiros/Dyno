@@ -1,5 +1,5 @@
 {
-  "name": "@artesaos/mobile",
+  "name": "@dyno/mobile",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "dependencies": {

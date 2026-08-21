@@ -10,7 +10,7 @@ Crochet artisans (mostly women, Brazilian market) who make amigurumi and handmad
 
 ## Product Purpose
 
-"Ponto a Ponto" is a mobile app to store crochet recipes, run a per-piece production timer, log steps and materials as they happen, and derive a suggested price from time + materials. Success means the artisan finishes a piece, knows exactly how long it took and what it cost, and has a reusable recipe for the next one.
+"Dyno" is a mobile app to store crochet recipes, run a per-piece production timer, log steps and materials as they happen, and derive a suggested price from time + materials. "Ateliê" (workshop) is the descriptor/tagline of the brand — e.g. "Dyno, seu ateliê de bolso" — never part of the app name itself. Success means the artisan finishes a piece, knows exactly how long it took and what it cost, and has a reusable recipe for the next one.
 
 ## Brand Personality
 

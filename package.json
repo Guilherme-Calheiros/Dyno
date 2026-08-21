@@ -1,12 +1,12 @@
 {
-  "name": "artesaos",
+  "name": "dyno",
   "private": true,
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "mobile": "pnpm --filter @artesaos/mobile start",
-    "server": "pnpm --filter @artesaos/server dev",
+    "mobile": "pnpm --filter @dyno/mobile start",
+    "server": "pnpm --filter @dyno/server dev",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
