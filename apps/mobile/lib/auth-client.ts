@@ -3,12 +3,16 @@ import { expoClient } from "@better-auth/expo/client";
 import { emailOTPClient } from "better-auth/client/plugins";
 import * as SecureStore from "expo-secure-store";
 
+const scheme = "dyno";
+const baseURL = process.env.EXPO_PUBLIC_BETTER_AUTH_BASE_URL!;
+
 export const authClient = createAuthClient({
-  baseURL: process.env.EXPO_PUBLIC_BETTER_AUTH_BASE_URL!,
+  baseURL,
   plugins: [
     expoClient({
-      scheme: "dyno",
-      storage: SecureStore,
+        scheme,
+        storagePrefix: "dyno",
+        storage: SecureStore,
     }),
     emailOTPClient(),
   ],

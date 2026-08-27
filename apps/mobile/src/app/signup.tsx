@@ -9,6 +9,7 @@ import appName from "@/assets/images/app-name.png";
 import { Link, useRouter } from "expo-router";
 import { authClient } from "../../lib/auth-client";
 import { signupSchema, type SignupFormData } from "@/lib/validations";
+import SocialSignIn from "@/components/ui/SocialSignIn";
 
 export default function Signup() {
     const [name, setName] = useState("");
@@ -61,26 +62,6 @@ export default function Signup() {
             );
         } finally {
             setLoading(false);
-        }
-    }
-
-    async function handleGoogleSignUp() {
-        try {
-            const { error } = await authClient.signIn.social({
-                provider: "google",
-                callbackURL: "/home",
-            });
-
-            if (error) {
-                toast.error(error.message ?? "Erro ao criar conta");
-                return;
-            }
-
-            router.replace("/home");
-        } catch (err) {
-            toast.error(
-                err instanceof Error ? err.message : "Erro desconhecido"
-            );
         }
     }
 
@@ -155,12 +136,7 @@ export default function Signup() {
                                 <View style={styles.dividerLine} />
                             </View>
 
-                            <Button
-                                label="Criar conta com Google"
-                                variant="secondary"
-                                icon="google"
-                                onPress={handleGoogleSignUp}
-                            />
+                            <SocialSignIn />
                         </View>
                     </View>
 

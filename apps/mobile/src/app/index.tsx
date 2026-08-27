@@ -8,6 +8,7 @@ import appName from "@/assets/images/app-name.png";
 import { Link, useRouter } from "expo-router";
 import { authClient } from "../../lib/auth-client";
 import { loginSchema, type LoginFormData } from "@/lib/validations";
+import SocialSignIn from "@/components/ui/SocialSignIn";
 
 export default function Index() {
     const [email, setEmail] = useState("");
@@ -34,7 +35,7 @@ export default function Index() {
         setLoading(true);
 
         try {
-            const { data, error } = await authClient.signIn.email({
+            const { error } = await authClient.signIn.email({
                 email: result.data.email,
                 password: result.data.password,
             });
@@ -51,26 +52,6 @@ export default function Index() {
             );
         } finally {
             setLoading(false);
-        }
-    }
-
-    async function handleGoogleSignIn() {
-        try {
-            const { error } = await authClient.signIn.social({
-                provider: "google",
-                callbackURL: "/home"
-            });
-
-            if (error) {
-                toast.error(error.message ?? "Erro ao entrar com Google");
-                return;
-            }
-
-            router.replace("/home");
-        } catch (err) {
-            toast.error(
-                err instanceof Error ? err.message : "Erro desconhecido"
-            );
         }
     }
 
@@ -134,12 +115,7 @@ export default function Index() {
                                 <View style={styles.dividerLine} />
                             </View>
 
-                            <Button
-                                label="Entrar com Google"
-                                variant="secondary"
-                                icon="google"
-                                onPress={handleGoogleSignIn}
-                            />
+                            <SocialSignIn />
                         </View>
                     </View>
 
