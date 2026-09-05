@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Text, View, ScrollView, StyleSheet, KeyboardAvoidingView, Platform, Image } from "react-native";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import PasswordInput from "@/components/ui/PasswordInput";
+import SocialSignIn from "@/components/ui/SocialSignIn";
 import BackButton from "@/components/ui/BackButton";
 import { useToast } from "@/components/ui/Toast";
 import { colors, font } from "@/theme/tokens";
@@ -54,33 +56,13 @@ export default function Signup() {
                 return;
             }
 
-            router.replace("/home");
+            router.replace("/");
         } catch (err) {
             toast.error(
                 err instanceof Error ? err.message : "Erro desconhecido"
             );
         } finally {
             setLoading(false);
-        }
-    }
-
-    async function handleGoogleSignUp() {
-        try {
-            const { error } = await authClient.signIn.social({
-                provider: "google",
-                callbackURL: "/home",
-            });
-
-            if (error) {
-                toast.error(error.message ?? "Erro ao criar conta");
-                return;
-            }
-
-            router.replace("/home");
-        } catch (err) {
-            toast.error(
-                err instanceof Error ? err.message : "Erro desconhecido"
-            );
         }
     }
 
@@ -95,7 +77,7 @@ export default function Signup() {
                 showsVerticalScrollIndicator={false}
             >
                 <View style={styles.container}>
-                    <BackButton href="/" />
+                    <BackButton href="/login" />
 
                     <View style={styles.content}>
                         <View style={styles.brandWrap}>
@@ -126,18 +108,16 @@ export default function Signup() {
                                 value={email}
                                 error={errors.email}
                             />
-                            <Input
+                            <PasswordInput
                                 label="Senha"
                                 placeholder="••••••••"
-                                secureTextEntry
                                 onChangeText={setPassword}
                                 value={password}
                                 error={errors.password}
                             />
-                            <Input
+                            <PasswordInput
                                 label="Confirmar senha"
                                 placeholder="••••••••"
-                                secureTextEntry
                                 onChangeText={setConfirmPassword}
                                 value={confirmPassword}
                                 error={errors.confirmPassword}
@@ -155,11 +135,9 @@ export default function Signup() {
                                 <View style={styles.dividerLine} />
                             </View>
 
-                            <Button
+                            <SocialSignIn
                                 label="Criar conta com Google"
-                                variant="secondary"
-                                icon="google"
-                                onPress={handleGoogleSignUp}
+                                errorMessage="Erro ao criar conta"
                             />
                         </View>
                     </View>

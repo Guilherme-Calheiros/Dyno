@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Text, View, ScrollView, StyleSheet, KeyboardAvoidingView, Platform, Image, TextInput } from "react-native";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import PasswordInput from "@/components/ui/PasswordInput";
 import BackButton from "@/components/ui/BackButton";
 import { useToast } from "@/components/ui/Toast";
 import { colors, font, radius } from "@/theme/tokens";
@@ -222,19 +223,17 @@ export default function VerifyOtp() {
                             </View>
                         ) : (
                             <View style={styles.form}>
-                                <Input
+                                <PasswordInput
                                     label="Nova senha"
                                     placeholder="••••••••"
-                                    secureTextEntry
                                     value={password}
                                     onChangeText={setPassword}
                                     error={errors.password}
                                 />
 
-                                <Input
+                                <PasswordInput
                                     label="Confirmar senha"
                                     placeholder="••••••••"
-                                    secureTextEntry
                                     value={confirmPassword}
                                     onChangeText={setConfirmPassword}
                                     error={errors.confirmPassword}
