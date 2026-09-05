@@ -66,7 +66,7 @@ export default function ForgotPassword() {
                 showsVerticalScrollIndicator={false}
             >
                 <View style={styles.container}>
-                    <BackButton href="/" />
+                    <BackButton href="/login" />
 
                     <View style={styles.content}>
                         <View style={styles.brandWrap}>

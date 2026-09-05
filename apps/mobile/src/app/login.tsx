@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Text, View, ScrollView, StyleSheet, KeyboardAvoidingView, Platform, Image } from "react-native";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import PasswordInput from "@/components/ui/PasswordInput";
+import SocialSignIn from "@/components/ui/SocialSignIn";
 import { useToast } from "@/components/ui/Toast";
 import { colors, font } from "@/theme/tokens";
 import appName from "@/assets/images/app-name.png";
@@ -9,7 +11,7 @@ import { Link, useRouter } from "expo-router";
 import { authClient } from "../../lib/auth-client";
 import { loginSchema, type LoginFormData } from "@/lib/validations";
 
-export default function Index() {
+export default function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [errors, setErrors] = useState<Partial<Record<keyof LoginFormData, string>>>({});
@@ -40,39 +42,23 @@ export default function Index() {
             });
 
             if (error) {
+                if (error.status === 429) {
+                    toast.error("Muitas tentativas. Tente novamente em alguns minutos.");
+                    return;
+                }
                 toast.error(error.message ?? "Erro ao entrar");
                 return;
             }
 
-            router.replace("/home");
+router.replace("/");
         } catch (err) {
             toast.error(
-                err instanceof Error ? err.message : "Erro desconhecido"
+                err instanceof Error ? err.message : "Erro ao entrar"
             );
         } finally {
             setLoading(false);
         }
-    }
-
-    async function handleGoogleSignIn() {
-        try {
-            const { error } = await authClient.signIn.social({
-                provider: "google",
-                callbackURL: "/home"
-            });
-
-            if (error) {
-                toast.error(error.message ?? "Erro ao entrar com Google");
-                return;
-            }
-
-            router.replace("/home");
-        } catch (err) {
-            toast.error(
-                err instanceof Error ? err.message : "Erro desconhecido"
-            );
-        }
-    }
+}
 
     return (
         <KeyboardAvoidingView
@@ -109,10 +95,9 @@ export default function Index() {
                                 onChangeText={setEmail}
                                 error={errors.email}
                             />
-                            <Input
+                            <PasswordInput
                                 label="Senha"
                                 placeholder="••••••••"
-                                secureTextEntry
                                 value={password}
                                 onChangeText={setPassword}
                                 error={errors.password}
@@ -134,12 +119,7 @@ export default function Index() {
                                 <View style={styles.dividerLine} />
                             </View>
 
-                            <Button
-                                label="Entrar com Google"
-                                variant="secondary"
-                                icon="google"
-                                onPress={handleGoogleSignIn}
-                            />
+                            <SocialSignIn />
                         </View>
                     </View>
 
