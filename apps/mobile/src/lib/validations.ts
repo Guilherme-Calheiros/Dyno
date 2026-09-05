@@ -60,3 +60,38 @@ export const resetPasswordSchema = z
     });
 
 export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
+
+export const profileSchema = z.object({
+    name: z
+        .string()
+        .trim()
+        .min(1, "Nome é obrigatório")
+        .max(100, "Nome deve ter no máximo 100 caracteres"),
+
+    bio: z
+        .string()
+        .trim()
+        .max(500, "Bio deve ter no máximo 500 caracteres"),
+});
+
+export type ProfileFormData = z.infer<typeof profileSchema>;
+
+export const changePasswordSchema = z
+    .object({
+        currentPassword: z
+            .string()
+            .min(1, "Senha atual é obrigatória"),
+        newPassword: z
+            .string()
+            .min(1, "Nova senha é obrigatória")
+            .min(6, "A nova senha deve ter no mínimo 6 caracteres"),
+        confirmPassword: z
+            .string()
+            .min(1, "Confirmação é obrigatória"),
+    })
+    .refine((data) => data.newPassword === data.confirmPassword, {
+        message: "As senhas não coincidem",
+        path: ["confirmPassword"],
+    });
+
+export type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
