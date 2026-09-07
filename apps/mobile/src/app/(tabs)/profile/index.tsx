@@ -53,16 +53,22 @@ export default function Profile() {
     }
 
     function onPress(item: MenuItem) {
-        if (item.key === "logout") {
-            logout();
-            return;
-        }
-        if (item.key === "seguranca") {
-            router.push("/profile/seguranca");
-            return;
-        }
-        if (item.key === "excluir") {
-            router.push("/profile/excluir-conta");
+        switch (item.key) {
+            case "prefs":
+                router.push("/profile/preferencias");
+                break;
+            case "help":
+                router.push("/profile/ajuda");
+                break;
+            case "seguranca":
+                router.push("/profile/seguranca");
+                break;
+            case "logout":
+                logout();
+                break;
+            case "excluir":
+                router.push("/profile/excluir-conta");
+                break;
         }
     }
 
