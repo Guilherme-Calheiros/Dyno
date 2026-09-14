@@ -20,7 +20,7 @@ import { useToast } from "@/components/ui/Toast";
 import { authClient } from "../../../../lib/auth-client";
 import { profileSchema } from "@/lib/validations";
 import { colors, font } from "@/theme/tokens";
-import { API_URL, authedFetch } from "@/config/api";
+import { authedFetch } from "../../../../lib/authed-fetch";
 
 type UpdatePayload = {
     name?: string;
@@ -169,15 +169,8 @@ export default function EditarPerfil() {
 
         try {
             if (hasProfileChanges) {
-                const cookies = await authClient.getCookie();
-
-                const response = await fetch(`${API_URL}/api/profile`, {
+                const response = await authedFetch("/api/profile", {
                         method: "PATCH",
-                        headers: {
-                            Cookie: cookies,
-                            "Content-Type": "application/json",
-                        },
-                        credentials: "omit",
                         body: JSON.stringify({
                             name: nome,
                             bio,
