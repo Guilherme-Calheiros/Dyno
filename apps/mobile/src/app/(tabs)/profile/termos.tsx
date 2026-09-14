@@ -1,22 +1,19 @@
 import {
     KeyboardAvoidingView,
     Platform,
-    Pressable,
     ScrollView,
     StyleSheet,
     Text,
     View,
 } from "react-native";
-import { FontAwesome5 } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import BackButton from "@/components/ui/BackButton";
 import { colors, font } from "@/theme/tokens";
 
 // TODO: revisar texto legal dos termos de uso com assessoria jurídica
 // e substituir conteúdo provisório antes do lançamento.
 export default function Termos() {
     const insets = useSafeAreaInsets();
-    const router = useRouter();
 
     return (
         <KeyboardAvoidingView
@@ -30,16 +27,7 @@ export default function Termos() {
             >
                 <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
                     <View style={styles.header}>
-                        <Pressable
-                            style={styles.backBtn}
-                            onPress={() => router.back()}
-                        >
-                            <FontAwesome5
-                                name="arrow-left"
-                                size={18}
-                                color={colors.ink}
-                            />
-                        </Pressable>
+                        <BackButton />
                         <Text style={styles.headerTitle}>Termos de uso</Text>
                     </View>
 
@@ -160,14 +148,6 @@ const styles = StyleSheet.create({
         alignItems: "center",
         gap: 12,
         height: 40,
-    },
-    backBtn: {
-        width: 40,
-        height: 40,
-        borderRadius: 999,
-        backgroundColor: colors.surface,
-        alignItems: "center",
-        justifyContent: "center",
     },
     headerTitle: {
         fontFamily: font.semiBold,

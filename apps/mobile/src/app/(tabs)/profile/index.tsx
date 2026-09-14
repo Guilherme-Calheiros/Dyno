@@ -99,7 +99,7 @@ export default function Profile() {
                     style={styles.editBtn}
                     onPress={() => router.push("/profile/editar-perfil")}
                 >
-                    <FontAwesome5 name="user-edit" size={16} color={colors.inkSoft} />
+                    <FontAwesome5 name="user-edit" size={16} color={colors.surface} />
                 </Pressable>
             </View>
 
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 999,
-        backgroundColor: colors.surface,
+        backgroundColor: colors.primary,
         borderWidth: 1,
         borderColor: colors.line,
         alignItems: "center",

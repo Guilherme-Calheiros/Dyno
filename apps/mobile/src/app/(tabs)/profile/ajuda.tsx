@@ -11,6 +11,7 @@ import { FontAwesome5 } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Constants from "expo-constants";
+import BackButton from "@/components/ui/BackButton";
 import { colors, font } from "@/theme/tokens";
 
 // TODO: revisar contatos de suporte (placeholder) e implementar ações
@@ -88,16 +89,7 @@ export default function Ajuda() {
             >
                 <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
                     <View style={styles.header}>
-                        <Pressable
-                            style={styles.backBtn}
-                            onPress={() => router.back()}
-                        >
-                            <FontAwesome5
-                                name="arrow-left"
-                                size={18}
-                                color={colors.ink}
-                            />
-                        </Pressable>
+                        <BackButton />
                         <Text style={styles.headerTitle}>Ajuda e suporte</Text>
                     </View>
 
@@ -178,14 +170,6 @@ const styles = StyleSheet.create({
         alignItems: "center",
         gap: 12,
         height: 40,
-    },
-    backBtn: {
-        width: 40,
-        height: 40,
-        borderRadius: 999,
-        backgroundColor: colors.surface,
-        alignItems: "center",
-        justifyContent: "center",
     },
     headerTitle: {
         fontFamily: font.semiBold,

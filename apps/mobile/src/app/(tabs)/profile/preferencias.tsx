@@ -1,7 +1,6 @@
 import {
     KeyboardAvoidingView,
     Platform,
-    Pressable,
     ScrollView,
     StyleSheet,
     Switch,
@@ -10,15 +9,14 @@ import {
 } from "react-native";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
 import { useState } from "react";
+import BackButton from "@/components/ui/BackButton";
 import { colors, font } from "@/theme/tokens";
 
 // TODO: implementar preferências reais (tema, notificações, idioma
 // e persistência) em vez do placeholder atual.
 export default function Preferencias() {
     const insets = useSafeAreaInsets();
-    const router = useRouter();
 
     const [temaEscuro, setTemaEscuro] = useState(false);
     const [notificacoes, setNotificacoes] = useState(true);
@@ -35,16 +33,7 @@ export default function Preferencias() {
             >
                 <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
                     <View style={styles.header}>
-                        <Pressable
-                            style={styles.backBtn}
-                            onPress={() => router.back()}
-                        >
-                            <FontAwesome5
-                                name="arrow-left"
-                                size={18}
-                                color={colors.ink}
-                            />
-                        </Pressable>
+                        <BackButton />
                         <Text style={styles.headerTitle}>Preferências</Text>
                     </View>
 
@@ -156,14 +145,6 @@ const styles = StyleSheet.create({
         alignItems: "center",
         gap: 12,
         height: 40,
-    },
-    backBtn: {
-        width: 40,
-        height: 40,
-        borderRadius: 999,
-        backgroundColor: colors.surface,
-        alignItems: "center",
-        justifyContent: "center",
     },
     headerTitle: {
         fontFamily: font.semiBold,

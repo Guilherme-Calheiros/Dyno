@@ -2,18 +2,17 @@ import { useMemo, useState } from "react";
 import {
     KeyboardAvoidingView,
     Platform,
-    Pressable,
     ScrollView,
     StyleSheet,
     Text,
     View,
 } from "react-native";
-import { FontAwesome5 } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { File } from "expo-file-system";
 import { fetch as expoFetch } from "expo/fetch";
 
+import BackButton from "@/components/ui/BackButton";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import AvatarPicker from "@/components/profile/AvatarPicker";
@@ -242,16 +241,7 @@ export default function EditarPerfil() {
                     ]}
                 >
                     <View style={styles.header}>
-                        <Pressable
-                            style={styles.backBtn}
-                            onPress={() => router.back()}
-                        >
-                            <FontAwesome5
-                                name="arrow-left"
-                                size={18}
-                                color={colors.ink}
-                            />
-                        </Pressable>
+                        <BackButton />
 
                         <Text style={styles.headerTitle}>
                             Editar perfil
@@ -330,13 +320,6 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         gap: 16,
-    },
-
-    backBtn: {
-        width: 40,
-        height: 40,
-        alignItems: "center",
-        justifyContent: "center",
     },
 
     headerTitle: {

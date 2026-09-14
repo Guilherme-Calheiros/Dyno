@@ -77,7 +77,9 @@ export default function Signup() {
                 showsVerticalScrollIndicator={false}
             >
                 <View style={styles.container}>
-                    <BackButton href="/login" />
+                    <View style={styles.backWrap}>
+                        <BackButton />
+                    </View>
 
                     <View style={styles.content}>
                         <View style={styles.brandWrap}>
@@ -161,6 +163,11 @@ const styles = StyleSheet.create({
         paddingVertical: 48,
         backgroundColor: colors.bg,
         justifyContent: "center",
+    },
+    backWrap: {
+        position: "absolute",
+        top: 48,
+        left: 16,
     },
     content: {
         gap: 16,
