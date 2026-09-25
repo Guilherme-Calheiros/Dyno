@@ -11,12 +11,14 @@ import { colors, control, font, radius } from "@/theme/tokens";
 export type InputProps = TextInputProps & {
     label?: string;
     error?: string;
+    prefix?: ReactNode;
     rightIcon?: ReactNode;
 };
 
 export default function Input({
     label,
     error,
+    prefix,
     rightIcon,
     editable,
     placeholderTextColor = colors.inkFaint,
@@ -34,6 +36,7 @@ export default function Input({
                     error && styles.fieldError,
                 ]}
             >
+                {prefix ? <View style={styles.iconSlot}>{prefix}</View> : null}
                 <TextInput
                     style={[styles.input, isDisabled && styles.inputDisabled]}
                     placeholderTextColor={placeholderTextColor}
