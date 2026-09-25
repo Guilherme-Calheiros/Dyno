@@ -41,7 +41,10 @@
           "photosPermission": "Permita que o Dyno acesse suas fotos.",
           "microphonePermission": false
         }
-      ]
+      ],
+      "expo-font",
+      "expo-secure-store",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
