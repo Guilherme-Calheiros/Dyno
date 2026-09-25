@@ -14,7 +14,7 @@ import {
 import { user } from "./auth.js";
 
 export const statusEnum = pgEnum("status", ["andamento", "concluido"]);
-export const unidadeEnum = pgEnum("unidade", ["peso", "unidade"]);
+export const unidadeEnum = pgEnum("unidade", ["unidade", "peso", "comprimento"]);
 
 // ── Receitas ──────────────────────────────────────────
 
@@ -66,12 +66,19 @@ export const receitasMateriais = pgTable("receitas_materiais", {
     .notNull()
     .references(() => receitas.id, { onDelete: "cascade" }),
   nome: text("nome").notNull(),
-  quantidadeUtilizada: decimal("quantidade_utilizada", {
+  quantidadeTotal: decimal("quantidade_total", {
     precision: 10,
     scale: 3,
   }).notNull(),
   quantidadeUnidade: unidadeEnum("quantidade_unidade").notNull(),
-  custoUnidade: decimal("custo_unidade", { precision: 10, scale: 2 }).notNull(),
+  quantidadeUtilizada: decimal("quantidade_utilizada", {
+    precision: 10,
+    scale: 3,
+  }).notNull(),
+  custoAdquirido: decimal("custo_adquirido", {
+    precision: 10,
+    scale: 2,
+  }).notNull(),
 });
 
 export const receitasNovelo = pgTable("receitas_novelo", {
@@ -88,7 +95,10 @@ export const receitasNovelo = pgTable("receitas_novelo", {
     scale: 3,
   }).notNull(),
   quantidadeUnidade: unidadeEnum("quantidade_unidade").notNull(),
-  custoUnidade: decimal("custo_unidade", { precision: 10, scale: 2 }).notNull(),
+  custoAdquirido: decimal("custo_adquirido", {
+    precision: 10,
+    scale: 2,
+  }).notNull(),
 });
 
 // ── Agulhas ───────────────────────────────────────────
@@ -179,12 +189,19 @@ export const producoesMateriais = pgTable("producoes_materiais", {
     .notNull()
     .references(() => producoes.id, { onDelete: "cascade" }),
   nome: text("nome").notNull(),
-  quantidadeUtilizada: decimal("quantidade_utilizada", {
+  quantidadeTotal: decimal("quantidade_total", {
     precision: 10,
     scale: 3,
   }).notNull(),
   quantidadeUnidade: unidadeEnum("quantidade_unidade").notNull(),
-  custoUnidade: decimal("custo_unidade", { precision: 10, scale: 2 }).notNull(),
+  quantidadeUtilizada: decimal("quantidade_utilizada", {
+    precision: 10,
+    scale: 3,
+  }).notNull(),
+  custoAdquirido: decimal("custo_adquirido", {
+    precision: 10,
+    scale: 2,
+  }).notNull(),
   custoTotal: decimal("custo_total", { precision: 10, scale: 2 }).notNull(),
 });
 
@@ -202,7 +219,10 @@ export const producoesNovelo = pgTable("producoes_novelo", {
     scale: 3,
   }).notNull(),
   quantidadeUnidade: unidadeEnum("quantidade_unidade").notNull(),
-  custoUnidade: decimal("custo_unidade", { precision: 10, scale: 2 }).notNull(),
+  custoAdquirido: decimal("custo_adquirido", {
+    precision: 10,
+    scale: 2,
+  }).notNull(),
   custoTotal: decimal("custo_total", { precision: 10, scale: 2 }).notNull(),
 });
 
