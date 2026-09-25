@@ -4,6 +4,8 @@ import { toNodeHandler } from "better-auth/node";
 import { auth } from "./auth/index.js";
 import storageRoutes from "./routes/storage.js";
 import profileRouter from "./routes/profile.js";
+import productionRouter from "./routes/production.js";
+import agulhaRouter from "./routes/agulha.js"
 
 const app = express();
 
@@ -16,6 +18,10 @@ app.use(express.json());
 app.use("/api/storage", storageRoutes);
 
 app.use("/api/profile", profileRouter);
+
+app.use("/api/productions", productionRouter);
+
+app.use("/api/agulhas", agulhaRouter);
 
 app.get("/api/hello", (_req, res) => {
   res.json({ message: "Olá do server!" });
