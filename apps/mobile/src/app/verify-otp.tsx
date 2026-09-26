@@ -26,7 +26,6 @@ export default function VerifyOtp() {
     const [otpVerified, setOtpVerified] = useState(false);
     const [resendCooldown, setResendCooldown] = useState(0);
     const inputRefs = useRef<(TextInput | null)[]>([]);
-    const cooldownRef = useRef<ReturnType<typeof setInterval>>(null);
 
     function handleOtpChange(text: string, index: number) {
         if (text.length > 1) {
@@ -50,16 +49,12 @@ export default function VerifyOtp() {
 
     useEffect(() => {
         if (resendCooldown <= 0) return;
-        cooldownRef.current = setInterval(() => {
-            setResendCooldown((prev) => {
-                if (prev <= 1) {
-                    clearInterval(cooldownRef.current);
-                    return 0;
-                }
-                return prev - 1;
-            });
+
+        const interval = setInterval(() => {
+            setResendCooldown((prev) => prev - 1);
         }, 1000);
-        return () => clearInterval(cooldownRef.current);
+
+        return () => clearInterval(interval);
     }, [resendCooldown]);
 
     async function handleResendOtp() {
