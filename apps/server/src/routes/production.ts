@@ -208,7 +208,12 @@ router.patch("/:id", async (req, res) => {
     try {
         const [producao] = await db
             .update(producoes)
-            .set({ nome, descricao, valorHora, margemLucro })
+            .set({
+                nome,
+                descricao,
+                valorHora: valorHora?.toString(),
+                margemLucro: margemLucro?.toString(),
+            })
             .where(
                 and(
                     eq(producoes.id, id),
