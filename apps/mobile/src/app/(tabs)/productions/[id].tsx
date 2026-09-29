@@ -20,7 +20,7 @@ import { useToast } from "@/components/ui/Toast";
 import { authedFetch } from "../../../../lib/authed-fetch";
 import { useProduction } from "@/hooks/useProduction";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import MaterialSheet from "@/components/material/MaterialSheet";
+import MaterialSheet, { EditingMaterial } from "@/components/material/MaterialSheet";
 import ProductionMaterialsCard from "@/components/productions/ProductionMaterialsCard";
 
 export default function ProductionDetail() {
@@ -29,7 +29,7 @@ export default function ProductionDetail() {
     const toast = useToast();
     const insets = useSafeAreaInsets();
 
-    const { production, loading, rename, saveDescription, saveValues, addMaterial } =
+    const { production, loading, rename, saveDescription, saveValues, addMaterial, editMaterial } =
         useProduction(id);
 
     const [showActions, setShowActions] = useState(false);
@@ -37,6 +37,7 @@ export default function ProductionDetail() {
     const [showMaterials, setShowMaterials] = useState(false);
     const [confirmVisible, setConfirmVisible] = useState(false);
     const [deleting, setDeleting] = useState(false);
+    const [editingMaterial, setEditingMaterial] = useState<EditingMaterial | null>(null)
 
     const handleDelete = async () => {
         setDeleting(true);
@@ -98,6 +99,10 @@ export default function ProductionDetail() {
                             production={production}
                             loading={loading}
                             onAdd={() => setShowMaterials(true)}
+                            onEdit={(material) => {
+                                setEditingMaterial(material);
+                                setShowMaterials(true);
+                            }}
                         />
 
                         <ProductionSummaryCard
@@ -111,8 +116,13 @@ export default function ProductionDetail() {
 
             <MaterialSheet 
                 isOpen={showMaterials}
-                onClose={() => setShowMaterials(false)}
-                onSubmit={addMaterial}
+                onClose={() => {
+                    setShowMaterials(false);
+                    setEditingMaterial(null);
+                }}
+                material={editingMaterial}
+                onAdd={addMaterial}
+                onEdit={editMaterial}
             />
 
             <ProductionActionsSheet

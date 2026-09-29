@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
     KeyboardAvoidingView,
     Platform,
@@ -17,9 +17,15 @@ import Select from "@/components/ui/Select";
 import ColorPicker from "@/components/ui/ColorPicker";
 
 import { colors, font } from "@/theme/tokens";
-import { parseDecimal } from "@/lib/format";
+import { formatInputNumber, parseDecimal } from "@/lib/format";
 
-import { QuantidadeUnidade, type MaterialInput } from "@artesaos/validation";
+import { 
+    QuantidadeUnidade, 
+    type MaterialInput,
+    type ProductionAgulha,
+    type ProductionMaterial,
+    type ProductionNovelo,
+} from "@artesaos/validation";
 import CurrencyInput from "react-native-currency-input";
 import { useAgulhas } from "@/hooks/useAgulhas";
 import YarnBallIcon from "../ui/YarnBallIcon";
@@ -28,8 +34,29 @@ import CrochetIcon from "../ui/CrochetIcon";
 type Props = {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit: (material: MaterialInput) => Promise<void>;
+    onAdd: (material: MaterialInput) => Promise<void>;
+    onEdit: (
+        materialId: number,
+        type: MaterialType,
+        material: MaterialInput
+    ) => Promise<void>;
+    material?: EditingMaterial | null;
 };
+
+export type EditingMaterial =
+    | {
+        type: "material";
+        item: ProductionMaterial;
+    }
+    | {
+        type: "novelo";
+        item: ProductionNovelo;
+    }
+    | {
+        type: "agulha";
+        item: ProductionAgulha;
+    }
+    | null;
 
 type MaterialType = MaterialInput["type"]
 
@@ -47,7 +74,9 @@ const noveloUnits = [
 export default function MaterialSheet({
     isOpen,
     onClose,
-    onSubmit,
+    onAdd,
+    onEdit,
+    material,
 }: Props) {
     const [saving, setSaving] = useState(false);
 
@@ -67,6 +96,51 @@ export default function MaterialSheet({
     const { agulhas, loading: loadingAgulhas } = useAgulhas(
         isOpen && type === "agulha"
     );
+
+    useEffect(() => {
+        if (!isOpen) return;
+
+        if(!material) {
+            resetForm();
+            setType("material");
+            return;
+        }
+
+        setType(material.type);
+
+        switch (material.type) {
+            case "agulha": {
+                setAgulhaId(material.item.agulhaId)
+                break
+            }
+
+            case "novelo": {
+                setNome(material.item.nome);
+                setCor(material.item.cor);
+                setPeso(formatInputNumber(material.item.peso));
+                setComprimento(formatInputNumber(material.item.comprimento));
+                setQuantidadeUtilizada(
+                    formatInputNumber(material.item.quantidadeUtilizada)
+                );
+                setQuantidadeUnidade(material.item.quantidadeUnidade);
+                setCustoAdquirido(Number(material.item.custoAdquirido));
+                break;
+            }
+
+            case "material": {
+                setNome(material.item.nome);
+                setQuantidadeTotal(
+                    formatInputNumber(material.item.quantidadeTotal)
+                );
+                setQuantidadeUtilizada(
+                    formatInputNumber(material.item.quantidadeUtilizada)
+                );
+                setQuantidadeUnidade(material.item.quantidadeUnidade);
+                setCustoAdquirido(Number(material.item.custoAdquirido));
+                break;
+            }
+        }
+    }, [isOpen, material])
 
     const defaultUnidade = (next: MaterialType): QuantidadeUnidade =>
         next === "novelo" ? "peso" : "unidade";
@@ -89,6 +163,14 @@ export default function MaterialSheet({
         setType(next);
     };
 
+    const submitMaterial = async (data: MaterialInput) => {
+        if (material) {
+            await onEdit(material.item.id, material.type, data);
+        } else {
+            await onAdd(data);
+        }
+    };
+
     const handleSubmit = async () => {
         if (saving) return;
 
@@ -106,7 +188,7 @@ export default function MaterialSheet({
                         custoAdquirido: custoAdquirido ?? 0,
                     }
 
-                    await onSubmit(material);
+                    await submitMaterial(material);
                     onClose();
                     resetForm();
                     break
@@ -124,7 +206,7 @@ export default function MaterialSheet({
                         custoAdquirido: custoAdquirido ?? 0,
                     }
 
-                    await onSubmit(novelo);
+                    await submitMaterial(novelo);
                     onClose();
                     resetForm();
                     break
@@ -138,7 +220,7 @@ export default function MaterialSheet({
                         agulhaId: agulhaId
                     }
 
-                    await onSubmit(agulha);
+                    await submitMaterial(agulha);
                     onClose();
                     resetForm();
                     break
@@ -160,7 +242,9 @@ export default function MaterialSheet({
                     keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
                 >
-                    <Text style={styles.title}>Adicionar material</Text>
+                    <Text style={styles.title}>
+                        {material ? "Editar Material" : "Adicionar Material"}
+                    </Text>
 
                     <Text style={styles.subtitle}>
                         Adicione um material utilizado nesta produção
@@ -168,6 +252,7 @@ export default function MaterialSheet({
 
                     <View style={styles.typeSelector}>
                         <Pressable
+                            disabled={!!material}
                             style={[
                                 styles.typeOption,
                                 type === "material" && styles.typeOptionActive,
@@ -190,6 +275,7 @@ export default function MaterialSheet({
                         </Pressable>
 
                         <Pressable
+                            disabled={!!material}
                             style={[
                                 styles.typeOption,
                                 type === "novelo" && styles.typeOptionActive,
@@ -211,6 +297,7 @@ export default function MaterialSheet({
                         </Pressable>
 
                         <Pressable
+                            disabled={!!material}
                             style={[
                                 styles.typeOption,
                                 type === "agulha" && styles.typeOptionActive,
@@ -428,7 +515,7 @@ export default function MaterialSheet({
 
                     <View style={styles.actions}>
                         <Button
-                            label="Adicionar material"
+                            label={material ? "Salvar Alterações" : "Adicionar Material"}
                             onPress={handleSubmit}
                             disabled={
                                 saving ||

@@ -4,26 +4,46 @@ import { colors, font } from "@/theme/tokens";
 import { formatBRL, parseDecimal } from "@/lib/format";
 import { useAgulhas } from "@/hooks/useAgulhas";
 import {
+    ProductionAgulha,
     ProductionDetail,
+    ProductionMaterial,
+    ProductionNovelo,
     QuantidadeUnidade,
 } from "@artesaos/validation";
 import MaterialIcon from "../material/MaterialIcon";
+import { EditingMaterial } from "../material/MaterialSheet";
 
 type Props = {
     production: ProductionDetail | null;
     loading: boolean;
     onAdd: () => void;
+    onEdit: (material: EditingMaterial) => void;
 };
 
 type MaterialType = "material" | "novelo" | "agulha";
 
-type MaterialItem = {
-    tipo: MaterialType;
-    id: number;
-    nome: string;
-    detalhe: string | null;
-    cor: string | null;
-};
+type MaterialItem =
+    | {
+          tipo: "material";
+          item: ProductionMaterial;
+          nome: string;
+          detalhe: string | null;
+          cor: string | null;
+      }
+    | {
+          tipo: "novelo";
+          item: ProductionNovelo;
+          nome: string;
+          detalhe: string | null;
+          cor: string | null;
+      }
+    | {
+          tipo: "agulha";
+          item: ProductionAgulha;
+          nome: string;
+          detalhe: string | null;
+          cor: string | null;
+      };
 
 const unitSuffix: Record<QuantidadeUnidade, string> = {
     unidade: "un",
@@ -43,6 +63,7 @@ export default function ProductionMaterialsCard({
     production,
     loading,
     onAdd,
+    onEdit,
 }: Props) {
     const materiais = production?.materiais ?? [];
     const novelos = production?.novelos ?? [];
@@ -55,7 +76,7 @@ export default function ProductionMaterialsCard({
             label: "Agulhas",
             items: agulhas.map((agulha) => ({
                 tipo: "agulha" as const,
-                id: agulha.id,
+                item: agulha,
                 nome:
                     agulhasList.find((item) => item.id === agulha.agulhaId)?.nome ??
                     `Agulha #${agulha.agulhaId}`,
@@ -67,26 +88,51 @@ export default function ProductionMaterialsCard({
             label: "Novelos",
             items: novelos.map((novelo) => ({
                 tipo: "novelo" as const,
-                id: novelo.id,
+                item: novelo,
                 nome: novelo.nome,
                 detalhe: `${formatQty(novelo.quantidadeUtilizada, novelo.quantidadeUnidade)} · ${formatBRL(novelo.custoTotal)}`,
                 cor: novelo.cor,
-            })),
+            }))
         },
         {
             label: "Outros",
             items: materiais.map((material) => ({
                 tipo: "material" as const,
-                id: material.id,
+                item: material,
                 nome: material.nome,
                 detalhe: `${formatQty(material.quantidadeUtilizada, material.quantidadeUnidade)} · ${formatBRL(material.custoTotal)}`,
                 cor: null,
-            })),
+            }))
         },
     ];
 
     const visibleGroups = groups.filter((group) => group.items.length > 0);
     const isEmpty = !loading && visibleGroups.length === 0;
+
+    const handleEdit = (item: MaterialItem) => {
+        switch (item.tipo) {
+            case "material":
+                onEdit({
+                    type: "material",
+                    item: item.item,
+                });
+                break;
+
+            case "novelo":
+                onEdit({
+                    type: "novelo",
+                    item: item.item,
+                });
+                break;
+
+            case "agulha":
+                onEdit({
+                    type: "agulha",
+                    item: item.item,
+                });
+                break;
+        }
+    };
 
     return (
         <View style={styles.section}>
@@ -113,7 +159,7 @@ export default function ProductionMaterialsCard({
                         <Text style={styles.groupLabel}>{group.label}</Text>
 
                         {group.items.map((item, index) => (
-                            <View key={`${item.tipo}-${item.id}`}>
+                            <View key={`${item.tipo}-${item.item.id}`}>
                                 {index > 0 && <View style={styles.divider} />}
 
                                 <View style={styles.row}>
@@ -145,6 +191,7 @@ export default function ProductionMaterialsCard({
                                         style={styles.rowAction}
                                         accessibilityRole="button"
                                         accessibilityLabel={`Editar ${item.nome}`}
+                                        onPress={() => handleEdit(item)}
                                     >
                                         <FontAwesome5
                                             name="chevron-right"

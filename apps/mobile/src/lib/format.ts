@@ -32,6 +32,18 @@ export function parseDecimal(value: string | null | undefined): number {
     return Number.isFinite(num) ? num : 0;
 }
 
+export function formatInputNumber(value: string | number | null | undefined): string {
+    const normalized = typeof value === "string" ? value.trim().replace(",", ".") : value;
+
+    if (normalized === null || normalized === undefined || normalized === "") return "";
+
+    const num = Number(normalized);
+
+    if (!Number.isFinite(num)) return "";
+
+    return String(num).replace(".", ",");
+}
+
 export function formatBRL(value: number | string | null | undefined): string {
     const num =
         typeof value === "string"

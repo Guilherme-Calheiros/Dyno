@@ -208,7 +208,57 @@ export function useProduction(id: string) {
             })
         }, [id]
     )
+    
+    const editMaterial = useCallback(
+        async (
+            materialId: number,
+            type: "material" | "novelo" | "agulha",
+            data: MaterialInput
+        ) => {
+            const response = await authedFetch(`/api/productions/${id}/materiais`,{
+                    method: "PATCH",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({
+                        id: materialId,
+                        ...data,
+                    }),
+                }
+            );
 
+            if (!response.ok) {
+                throw new Error("Erro ao editar material");
+            }
+
+            const updated = await response.json();
+
+            setProduction((prev) => {
+                if (!prev) return prev;
+
+                return {
+                    ...prev,
+                    custoMateriais: updated.custoMateriais ?? prev.custoMateriais,
+                    ...(type === "material" && {
+                        materiais: prev.materiais.map((item) =>
+                            item.id === materialId ? updated.material : item
+                        ),
+                    }),
+                    ...(type === "novelo" && {
+                        novelos: prev.novelos.map((item) =>
+                            item.id === materialId ? updated.material : item
+                        ),
+                    }),
+                    ...(type === "agulha" && {
+                        agulhas: prev.agulhas.map((item) =>
+                            item.id === materialId ? updated.material : item
+                        ),
+                    }),
+                };
+            });
+
+            toast.success("Material atualizado");
+        },
+        [id, toast]
+    );
     return {
         production,
         loading,
@@ -216,5 +266,6 @@ export function useProduction(id: string) {
         saveDescription,
         saveValues,
         addMaterial,
+        editMaterial,
     };
 }

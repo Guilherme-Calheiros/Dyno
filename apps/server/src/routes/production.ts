@@ -9,6 +9,8 @@ import { materialInputSchema, updateProductionSchema } from "@artesaos/validatio
 
 const router = Router();
 
+const round2 = (value: number) => Math.round(value * 100) / 100;
+
 router.get("/", async (req, res) => {
     const session = await auth.api.getSession({
         headers: fromNodeHeaders(req.headers),
@@ -346,8 +348,6 @@ router.post("/:id/materiais", async (req, res) => {
 
     const data = result.data;
 
-    const round2 = (value: number) => Math.round(value * 100) / 100;
-
     try {
         return await db.transaction(async (tx) => {
             switch (data.type) {
@@ -447,6 +447,239 @@ router.post("/:id/materiais", async (req, res) => {
 
         return res.status(500).json({
             error: "Erro ao adicionar material à produção",
+        });
+    }
+});
+
+router.patch("/:id/materiais", async (req, res) => {
+    const session = await auth.api.getSession({
+        headers: fromNodeHeaders(req.headers),
+    });
+
+    if (!session?.user) {
+        return res.status(401).json({ error: "Não autorizado" });
+    }
+
+    const producaoId = Number(req.params.id);
+
+    if (!Number.isInteger(producaoId) || producaoId <= 0) {
+        return res.status(400).json({
+            error: "ID da produção inválido",
+        });
+    }
+
+    const materialId = Number(req.body.id);
+
+    if (!Number.isInteger(materialId) || materialId <= 0) {
+        return res.status(400).json({
+            error: "ID do material inválido",
+        });
+    }
+
+    const parsed = materialInputSchema.safeParse(req.body);
+
+    if (!parsed.success) {
+        return res.status(400).json({
+            error: "Dados inválidos",
+        });
+    }
+
+    const data = parsed.data;
+
+    try {
+        const updated = await db.transaction(async (tx) => {
+            switch (data.type) {
+                case "material": {
+                    const [material] = await tx
+                        .select()
+                        .from(producoesMateriais)
+                        .where(
+                            and(
+                                eq(producoesMateriais.id, materialId),
+                                eq(producoesMateriais.producaoId, producaoId),
+                            )
+                        )
+
+                    if (!material) {
+                        throw new Error("Material não encontrado");
+                    }
+
+                    const oldCustoTotal = material.custoTotal;
+                    const newCustoTotal = round2(
+                        (data.quantidadeUtilizada / data.quantidadeTotal) *
+                            data.custoAdquirido
+                    ).toString();
+
+                    const [updateMaterial] = await tx
+                        .update(producoesMateriais)
+                        .set({
+                            nome: data.nome,
+                            quantidadeUtilizada: data.quantidadeUtilizada.toString(),
+                            quantidadeUnidade: data.quantidadeUnidade,
+                            quantidadeTotal: data.quantidadeTotal.toString(),
+                            custoAdquirido: data.custoAdquirido.toString(),
+                            custoTotal: newCustoTotal
+                        })
+                        .where(
+                            and(
+                                eq(producoesMateriais.id, materialId),
+                                eq(producoesMateriais.producaoId, producaoId)
+                            )
+                        )
+                        .returning()
+
+                    const [updatedProduction] = await tx
+                        .update(producoes)
+                        .set({
+                            custoMateriais: sql`
+                                ${producoes.custoMateriais}
+                                - ${oldCustoTotal}
+                                + ${newCustoTotal}
+                            `,
+                        })
+                        .where(
+                            and(
+                                eq(producoes.id, producaoId),
+                                eq(producoes.userId, session.user.id)
+                            )
+                        )
+                        .returning({
+                            custoMateriais: producoes.custoMateriais,
+                        });
+
+                    return {
+                        material: updateMaterial,
+                        custoMateriais: updatedProduction.custoMateriais,
+                    };
+                }
+                
+                case "novelo": {
+                    const [novelo] = await tx
+                        .select()
+                        .from(producoesNovelo)
+                        .where(
+                            and(
+                                eq(producoesNovelo.id, materialId),
+                                eq(producoesNovelo.producaoId, producaoId),
+                            )
+                        );
+
+                    if (!novelo) {
+                        throw new Error("Novelo não encontrado");
+                    }
+
+                    const oldCustoTotal = novelo.custoTotal;
+
+                    const total =
+                        data.quantidadeUnidade === "peso"
+                            ? data.peso
+                            : data.comprimento;
+
+                    const newCustoTotal = round2(
+                        (data.quantidadeUtilizada / total) *
+                            data.custoAdquirido
+                    ).toString();
+
+                    const [updatedNovelo] = await tx
+                        .update(producoesNovelo)
+                        .set({
+                            nome: data.nome,
+                            cor: data.cor,
+                            peso: data.peso.toString(),
+                            comprimento: data.comprimento.toString(),
+                            quantidadeUtilizada: data.quantidadeUtilizada.toString(),
+                            quantidadeUnidade: data.quantidadeUnidade,
+                            custoAdquirido: data.custoAdquirido.toString(),
+                            custoTotal: newCustoTotal,
+                        })
+                        .where(
+                            and(
+                                eq(producoesNovelo.id, materialId),
+                                eq(producoesNovelo.producaoId, producaoId)
+                            )
+                        )
+                        .returning();
+
+                    const [updatedProduction] = await tx
+                        .update(producoes)
+                        .set({
+                            custoMateriais: sql`
+                                ${producoes.custoMateriais}
+                                - ${oldCustoTotal}
+                                + ${newCustoTotal}
+                            `,
+                        })
+                        .where(
+                            and(
+                                eq(producoes.id, producaoId),
+                                eq(producoes.userId, session.user.id)
+                            )
+                        )
+                        .returning({
+                            custoMateriais: producoes.custoMateriais,
+                        });
+
+                    return {
+                        material: updatedNovelo,
+                        custoMateriais: updatedProduction.custoMateriais,
+                    };
+                }
+
+                case "agulha": {
+                    const [agulha] = await tx
+                        .select()
+                        .from(producoesAgulhas)
+                        .where(
+                            and(
+                                eq(producoesAgulhas.id, materialId),
+                                eq(producoesAgulhas.producaoId, producaoId)
+                            )
+                        );
+
+                    if (!agulha) {
+                        throw new Error("Agulha não encontrada");
+                    }
+
+                    const [updatedAgulha] = await tx
+                        .update(producoesAgulhas)
+                        .set({
+                            agulhaId: data.agulhaId,
+                        })
+                        .where(
+                            and(
+                                eq(producoesAgulhas.id, materialId),
+                                eq(producoesAgulhas.producaoId, producaoId)
+                            )
+                        )
+                        .returning();
+
+                    return {
+                        material: updatedAgulha,
+                    }
+                }
+
+            }
+        });
+
+        return res.json(updated);
+    } catch (error) {
+        console.error(error);
+
+        if (
+            error instanceof Error &&
+            (
+                error.message === "Material não encontrado" ||
+                error.message === "Novelo não encontrado" ||
+                error.message === "Agulha não encontrada"
+            )
+        ) {
+            return res.status(404).json({
+                error: error.message,
+            });
+        }
+
+        return res.status(500).json({
+            error: "Erro ao editar material",
         });
     }
 });
