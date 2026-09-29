@@ -14,6 +14,11 @@ function addCost(current: string, added: string): string {
     return (Math.round(total * 100) / 100).toFixed(2);
 }
 
+function removeCost(current: string, removed: string): string {
+    const total = parseDecimal(current) - parseDecimal(removed);
+    return Math.max(0, Math.round(total * 100) / 100).toFixed(2);
+}
+
 export function useProduction(id: string) {
     const toast = useToast();
     const [production, setProduction] = useState<ProductionDetail | null>(null);
@@ -259,6 +264,74 @@ export function useProduction(id: string) {
         },
         [id, toast]
     );
+
+    const removeMaterial = useCallback(
+        async (material: {
+            id: number;
+            type: "material" | "novelo" | "agulha";
+        }) => {
+            const response = await authedFetch(`/api/productions/${id}/materiais`,{
+                    method: "DELETE",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify(material),
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error("Erro ao excluir material");
+            }
+
+            setProduction((prev) => {
+                if (!prev) return prev;
+
+                switch (material.type) {
+                    case "material": {
+                        const item = prev.materiais.find(
+                            (item) => item.id === material.id
+                        );
+
+                        if (!item) return prev;
+
+                        return {
+                            ...prev,
+                            materiais: prev.materiais.filter(
+                                (item) => item.id !== material.id
+                            ),
+                            custoMateriais: removeCost(prev.custoMateriais, item.custoTotal),
+                        };
+                    }
+
+                    case "novelo": {
+                        const item = prev.novelos.find(
+                            (item) => item.id === material.id
+                        );
+
+                        if (!item) return prev;
+
+                        return {
+                            ...prev,
+                            novelos: prev.novelos.filter(
+                                (item) => item.id !== material.id
+                            ),
+                            custoMateriais: removeCost(prev.custoMateriais, item.custoTotal),
+                        };
+                    }
+
+                    case "agulha":
+                        return {
+                            ...prev,
+                            agulhas: prev.agulhas.filter(
+                                (item) => item.id !== material.id
+                            ),
+                        };
+                }
+            });
+
+            toast.success("Material excluído");
+        },
+        [id, toast]
+    );
+
     return {
         production,
         loading,
@@ -267,5 +340,6 @@ export function useProduction(id: string) {
         saveValues,
         addMaterial,
         editMaterial,
+        removeMaterial,
     };
 }

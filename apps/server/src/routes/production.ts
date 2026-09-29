@@ -684,4 +684,171 @@ router.patch("/:id/materiais", async (req, res) => {
     }
 });
 
+router.delete("/:id/materiais/", async (req, res) => {
+    const session = await auth.api.getSession({
+        headers: fromNodeHeaders(req.headers),
+    });
+
+    if (!session?.user) {
+        return res.status(401).json({ error: "Não autorizado" });
+    }
+
+    const producaoId = Number(req.params.id);
+    
+
+    if (!Number.isInteger(producaoId)) {
+        return res.status(400).json({ error: "ID inválido" });
+    }
+
+    const data = req.body
+
+    try {
+        return await db.transaction(async (tx) => {
+
+            const [producao] = await tx
+                .select({
+                    custoMateriais: producoes.custoMateriais,
+                })
+                .from(producoes)
+                .where(
+                    and(
+                        eq(producoes.id, producaoId),
+                        eq(producoes.userId, session.user.id)
+                    )
+                )
+                .limit(1);
+
+            if (!producao) {
+                return res.status(404).json({
+                    error: "Produção não encontrada",
+                });
+            }
+
+            switch (data.type) {
+                case "material": {
+                    const [material] = await tx
+                        .select({
+                            id: producoesMateriais.id,
+                            custoTotal: producoesMateriais.custoTotal
+                        })
+                        .from(producoesMateriais)
+                        .where(
+                            and(
+                                eq(producoesMateriais.id, data.id),
+                                eq(producoesMateriais.producaoId, producaoId)
+                            )
+                        )
+                        .limit(1)
+                    
+                    if (!material) {
+                        return res.status(404).json({
+                            error: "Material não encontrado",
+                        });
+                    }
+                    
+                    const custoTotal = material.custoTotal
+
+                    await tx
+                        .update(producoes)
+                        .set({
+                            custoMateriais: sql`${producoes.custoMateriais} - ${custoTotal}`,
+                        })
+                        .where(eq(producoes.id, producaoId));
+
+                    await tx
+                        .delete(producoesMateriais)
+                        .where(
+                            and(
+                                eq(producoesMateriais.id, material.id),
+                                eq(producoesMateriais.producaoId, producaoId)
+                            )
+                        );
+
+                    return res.json({ success: true });
+                        
+                }
+
+                case "novelo": {
+                    const [novelo] = await tx
+                        .select({
+                            id: producoesNovelo.id,
+                            custoTotal: producoesNovelo.custoTotal,
+                        })
+                        .from(producoesNovelo)
+                        .where(
+                            and(
+                                eq(producoesNovelo.id, data.id),
+                                eq(producoesNovelo.producaoId, producaoId)
+                            )
+                        )
+                        .limit(1);
+
+                    if (!novelo) {
+                        return res.status(404).json({
+                            error: "Novelo não encontrado",
+                        });
+                    }
+
+                    await tx
+                        .update(producoes)
+                        .set({
+                            custoMateriais: sql`${producoes.custoMateriais} - ${novelo.custoTotal}`,
+                        })
+                        .where(eq(producoes.id, producaoId));
+
+                    await tx
+                        .delete(producoesNovelo)
+                        .where(
+                            and(
+                                eq(producoesNovelo.id, novelo.id),
+                                eq(producoesNovelo.producaoId, producaoId)
+                            )
+                        );
+
+                    return res.json({ success: true });
+                }
+
+                case "agulha": {
+                    const [agulha] = await tx
+                        .select({
+                            id: producoesAgulhas.id,
+                        })
+                        .from(producoesAgulhas)
+                        .where(
+                            and(
+                                eq(producoesAgulhas.id, data.id),
+                                eq(producoesAgulhas.producaoId, producaoId)
+                            )
+                        )
+                        .limit(1);
+
+                    if (!agulha) {
+                        return res.status(404).json({
+                            error: "Agulha não encontrada",
+                        });
+                    }
+
+                    await tx
+                        .delete(producoesAgulhas)
+                        .where(
+                            and(
+                                eq(producoesAgulhas.id, agulha.id),
+                                eq(producoesAgulhas.producaoId, producaoId)
+                            )
+                        );
+
+                    return res.json({ success: true });
+    
+                }
+            }
+        });
+    } catch (error) {
+        console.error(error);
+
+        return res.status(500).json({
+            error: "Erro ao adicionar material à produção",
+        });
+    }
+});
+
 export default router;

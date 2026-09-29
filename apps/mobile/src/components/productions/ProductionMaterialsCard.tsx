@@ -18,6 +18,10 @@ type Props = {
     loading: boolean;
     onAdd: () => void;
     onEdit: (material: EditingMaterial) => void;
+    onDelete: (material: {
+        id: number;
+        type: MaterialType;
+    }) => Promise<void>;
 };
 
 type MaterialType = "material" | "novelo" | "agulha";
@@ -64,6 +68,7 @@ export default function ProductionMaterialsCard({
     loading,
     onAdd,
     onEdit,
+    onDelete,
 }: Props) {
     const materiais = production?.materiais ?? [];
     const novelos = production?.novelos ?? [];
@@ -131,6 +136,21 @@ export default function ProductionMaterialsCard({
                     item: item.item,
                 });
                 break;
+        }
+    };
+
+    const handleDelete = async (item: MaterialItem) => {
+        try {
+            await onDelete({
+                id: item.item.id,
+                type: item.tipo,
+            });
+        } catch (error) {
+            console.error(
+                error instanceof Error
+                    ? error.message
+                    : "Erro ao excluir material"
+            );
         }
     };
 
@@ -204,6 +224,7 @@ export default function ProductionMaterialsCard({
                                         style={styles.rowAction}
                                         accessibilityRole="button"
                                         accessibilityLabel={`Excluir ${item.nome}`}
+                                        onPress={() => handleDelete(item)}
                                     >
                                         <FontAwesome5
                                             name="trash-alt"

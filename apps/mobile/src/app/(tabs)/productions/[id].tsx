@@ -29,7 +29,7 @@ export default function ProductionDetail() {
     const toast = useToast();
     const insets = useSafeAreaInsets();
 
-    const { production, loading, rename, saveDescription, saveValues, addMaterial, editMaterial } =
+    const { production, loading, rename, saveDescription, saveValues, addMaterial, removeMaterial, editMaterial } =
         useProduction(id);
 
     const [showActions, setShowActions] = useState(false);
@@ -103,6 +103,7 @@ export default function ProductionDetail() {
                                 setEditingMaterial(material);
                                 setShowMaterials(true);
                             }}
+                            onDelete={removeMaterial}
                         />
 
                         <ProductionSummaryCard
