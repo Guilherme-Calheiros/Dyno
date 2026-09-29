@@ -2,6 +2,7 @@ import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, us
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { authClient } from "../../lib/auth-client";
 import { ToastProvider } from "@/components/ui/Toast";
 
@@ -32,22 +33,24 @@ export default function RootLayout() {
     }
 
     return (
-        <ToastProvider>
-            <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Protected guard={!!session}>
-                    <Stack.Screen
-                        name="(tabs)"
-                        options={{ headerShown: false }}
-                    />
-                </Stack.Protected>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+            <ToastProvider>
+                <Stack screenOptions={{ headerShown: false }}>
+                    <Stack.Protected guard={!!session}>
+                        <Stack.Screen
+                            name="(tabs)"
+                            options={{ headerShown: false }}
+                        />
+                    </Stack.Protected>
 
-                <Stack.Protected guard={!session}>
-                    <Stack.Screen name="login" />
-                    <Stack.Screen name="signup" />
-                    <Stack.Screen name="forgot-password" />
-                    <Stack.Screen name="verify-otp" />
-                </Stack.Protected>
-            </Stack>
-        </ToastProvider>
+                    <Stack.Protected guard={!session}>
+                        <Stack.Screen name="login" />
+                        <Stack.Screen name="signup" />
+                        <Stack.Screen name="forgot-password" />
+                        <Stack.Screen name="verify-otp" />
+                    </Stack.Protected>
+                </Stack>
+            </ToastProvider>
+        </GestureHandlerRootView>
     );
 }

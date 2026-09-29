@@ -1,6 +1,10 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import Input from "@/components/ui/Input";
+import ColorPickerLib, {
+    Panel1,
+    HueSlider,
+    Preview,
+} from "reanimated-color-picker";
 import { colors, font } from "@/theme/tokens";
 
 const PRESET_COLORS = [
@@ -26,17 +30,44 @@ type Props = {
     onChange: (color: string) => void;
 };
 
+const isPresetColor = (color: string) =>
+    PRESET_COLORS.includes(color.toLowerCase());
+
 export default function ColorPicker({ value, onChange }: Props) {
     const [customActive, setCustomActive] = useState(
-        value.length > 0 && !PRESET_COLORS.includes(value.toLowerCase())
+        () => value.length > 0 && !isPresetColor(value)
     );
+
+    const pickedRef = useRef<string | null>(null);
+
+    useEffect(() => {
+        const picked = pickedRef.current;
+        pickedRef.current = null;
+
+        if (picked !== null && picked === value) {
+            return;
+        }
+
+        setCustomActive(value.length > 0 && !isPresetColor(value));
+    }, [value]);
+
+    const commit = (color: string) => {
+        pickedRef.current = color;
+        onChange(color);
+    };
 
     const handleCustomToggle = () => {
         const next = !customActive;
+
         setCustomActive(next);
+
         if (next && !value) {
-            onChange("#8e5bd6");
+            commit("#8e5bd6");
         }
+    };
+
+    const handleColorComplete = (result: { hex: string }) => {
+        commit(result.hex);
     };
 
     return (
@@ -48,6 +79,7 @@ export default function ColorPicker({ value, onChange }: Props) {
                     const isActive =
                         !customActive &&
                         value.toLowerCase() === color.toLowerCase();
+
                     return (
                         <Pressable
                             key={color}
@@ -60,7 +92,7 @@ export default function ColorPicker({ value, onChange }: Props) {
                             ]}
                             onPress={() => {
                                 setCustomActive(false);
-                                onChange(color);
+                                commit(color);
                             }}
                         />
                     );
@@ -88,30 +120,19 @@ export default function ColorPicker({ value, onChange }: Props) {
             </View>
 
             {customActive && (
-                <Input
-                    label="Cor personalizada (hex)"
-                    value={value}
-                    onChangeText={(text) => {
-                        const normalized = text.trim();
-                        onChange(
-                            /^#/.test(normalized)
-                                ? normalized
-                                : `#${normalized}`
-                        );
-                    }}
-                    autoCapitalize="characters"
-                    autoCorrect={false}
-                    placeholder="#RRGGBB"
-                    placeholderTextColor={colors.inkFaint}
-                    rightIcon={
-                        <View
-                            style={[
-                                styles.preview,
-                                { backgroundColor: value },
-                            ]}
-                        />
-                    }
-                />
+                <View style={styles.customPicker}>
+                    <ColorPickerLib
+                        value={value || "#8e5bd6"}
+                        onCompleteJS={handleColorComplete}
+                        enableColorAnnouncements={false}
+                    >
+                        <Preview style={styles.preview} />
+
+                        <Panel1 style={styles.panel} />
+
+                        <HueSlider style={styles.hueSlider} />
+                    </ColorPickerLib>
+                </View>
             )}
         </View>
     );
@@ -121,16 +142,19 @@ const styles = StyleSheet.create({
     wrapper: {
         gap: 10,
     },
+
     label: {
         fontFamily: font.semiBold,
         fontSize: 13,
         color: colors.ink,
     },
+
     grid: {
         flexDirection: "row",
         flexWrap: "wrap",
         gap: 10,
     },
+
     swatch: {
         width: 40,
         height: 40,
@@ -138,28 +162,49 @@ const styles = StyleSheet.create({
         borderWidth: 2,
         borderColor: colors.border,
     },
+
     swatchActive: {
         borderColor: colors.primary,
         borderWidth: 3,
     },
+
     customSwatch: {
         backgroundColor: colors.bg,
         alignItems: "center",
         justifyContent: "center",
     },
+
     customPlus: {
         fontFamily: font.semiBold,
         fontSize: 20,
         color: colors.inkSoft,
     },
+
     customPlusActive: {
         color: colors.primary,
     },
-    preview: {
-        width: 24,
-        height: 24,
+
+    customPicker: {
+        gap: 12,
+        padding: 12,
         borderRadius: 12,
+        backgroundColor: colors.surface,
         borderWidth: 1,
         borderColor: colors.border,
+    },
+
+    preview: {
+        height: 36,
+        borderRadius: 8,
+    },
+
+    panel: {
+        height: 180,
+        borderRadius: 10,
+    },
+
+    hueSlider: {
+        height: 24,
+        borderRadius: 12,
     },
 });
