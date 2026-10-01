@@ -23,6 +23,8 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import MaterialSheet, { EditingMaterial } from "@/components/material/MaterialSheet";
 import ProductionMaterialsCard from "@/components/productions/ProductionMaterialsCard";
 import ProductionTimer from "@/components/productions/ProductionTimer";
+import Button from "@/components/ui/Button";
+import { ProductionStatus } from "@artesaos/validation";
 
 export default function ProductionDetail() {
     const { id } = useLocalSearchParams<{ id: string }>();
@@ -30,7 +32,7 @@ export default function ProductionDetail() {
     const toast = useToast();
     const insets = useSafeAreaInsets();
 
-    const { production, loading, rename, saveDescription, saveValues, addMaterial, removeMaterial, editMaterial, pauseTimer, resetTimer } =
+    const { production, loading, rename, saveDescription, saveValues, addMaterial, removeMaterial, editMaterial, pauseTimer, resetTimer, setStatus } =
         useProduction(id);
 
     const [showActions, setShowActions] = useState(false);
@@ -38,7 +40,20 @@ export default function ProductionDetail() {
     const [showMaterials, setShowMaterials] = useState(false);
     const [confirmVisible, setConfirmVisible] = useState(false);
     const [deleting, setDeleting] = useState(false);
+    const [pendingStatus, setPendingStatus] = useState<ProductionStatus | null>(null);
+    const [changingStatus, setChangingStatus] = useState(false);
     const [editingMaterial, setEditingMaterial] = useState<EditingMaterial | null>(null)
+
+    const isConcluida = production?.status === "concluido";
+
+    const handleChangeStatus = async (status: ProductionStatus) => {
+        setChangingStatus(true);
+        try {
+            await setStatus(status);
+        } finally {
+            setChangingStatus(false);
+        }
+    }
 
     const handleDelete = async () => {
         setDeleting(true);
@@ -93,6 +108,7 @@ export default function ProductionDetail() {
 
                         <ProductionTimer
                             tempoReal={production?.tempoReal ?? 0}
+                            locked={isConcluida}
                             onPause={pauseTimer}
                             onReset={resetTimer}
                         />
@@ -118,6 +134,16 @@ export default function ProductionDetail() {
                             loading={loading}
                             onEdit={() => setShowValues(true)}
                         />
+
+                        { !isConcluida && (
+                            <Button
+                                label="Finalizar produção"
+                                variant="primary"
+                                icon="check"
+                                disabled={loading || changingStatus}
+                                onPress={() => setPendingStatus("concluido")}
+                            />
+                        )}
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
@@ -137,6 +163,11 @@ export default function ProductionDetail() {
                 isOpen={showActions}
                 onClose={() => setShowActions(false)}
                 onDelete={() => setConfirmVisible(true)}
+                onReabrir={
+                    isConcluida
+                        ? () => setPendingStatus("andamento")
+                        : undefined
+                }
             />
 
             <ProductionValuesSheet
@@ -160,6 +191,39 @@ export default function ProductionDetail() {
                 onConfirm={() => {
                     setConfirmVisible(false);
                     handleDelete();
+                }}
+            />
+
+            <ConfirmDialog
+                visible={pendingStatus !== null}
+                title={
+                    pendingStatus === "concluido"
+                        ? "Finalizar produção"
+                        : "Voltar para em andamento"
+                }
+                message={
+                    pendingStatus === "concluido"
+                        ? "A produção será marcada como concluída e movida para a aba Concluídas. Você pode voltar para em andamento depois."
+                        : "A produção voltará para a aba Em andamento e o cronômetro poderá ser usado novamente."
+                }
+                icon={pendingStatus === "concluido" ? "check" : "undo"}
+                confirmLabel={
+                    pendingStatus === "concluido" ? "Finalizar" : "Voltar"
+                }
+                cancelLabel="Cancelar"
+                loading={changingStatus}
+                onCancel={() => setPendingStatus(null)}
+                onClose={() => setPendingStatus(null)}
+                onConfirm={async () => {
+                    const target = pendingStatus;
+
+                    if (!target) return;
+
+                    try {
+                        await handleChangeStatus(target);
+                    } finally {
+                        setPendingStatus(null);
+                    }
                 }}
             />
         </View>

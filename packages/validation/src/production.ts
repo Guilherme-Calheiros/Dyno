@@ -31,6 +31,8 @@ export const updateProductionSchema = z
             .min(0, "Margem de lucro não pode ser negativa")
             .nullable()
             .optional(),
+
+        status: z.enum(["andamento", "concluido"]).optional(),
     })
     .strict()
     .refine((data) => Object.keys(data).length > 0, {

@@ -174,7 +174,7 @@ router.patch("/:id", async (req, res) => {
         return res.status(400).json({ error: msg });
     }
 
-    const { nome, descricao, valorHora, margemLucro } = result.data;
+    const { nome, descricao, valorHora, margemLucro, status } = result.data;
 
     try {
         const [producao] = await db
@@ -184,6 +184,9 @@ router.patch("/:id", async (req, res) => {
                 descricao,
                 valorHora: valorHora?.toString(),
                 margemLucro: margemLucro?.toString(),
+                status,
+                ...(status === "concluido" && { finalizadoEm: new Date() }),
+                ...(status === "andamento" && { finalizadoEm: null }),
             })
             .where(
                 and(

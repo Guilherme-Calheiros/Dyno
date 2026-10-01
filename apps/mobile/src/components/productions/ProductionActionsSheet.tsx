@@ -7,17 +7,40 @@ type ProductionActionsSheetProps = {
     isOpen: boolean;
     onClose: () => void;
     onDelete: () => void;
+    onReabrir?: () => void;
 };
 
 export default function ProductionActionsSheet({
     isOpen,
     onClose,
     onDelete,
+    onReabrir,
 }: ProductionActionsSheetProps) {
     return (
         <Sheet isOpen={isOpen} onClose={onClose}>
             <View style={styles.sheetContent}>
                 <Text style={styles.sheetTitle}>Ações da produção</Text>
+                {onReabrir ? (
+                    <Pressable
+                        style={({ pressed }) => [
+                            styles.sheetOption,
+                            pressed && styles.sheetOptionPressed,
+                        ]}
+                        onPress={() => {
+                            onClose();
+                            onReabrir();
+                        }}
+                    >
+                        <FontAwesome5
+                            name="undo"
+                            size={16}
+                            color={colors.inkSoft}
+                        />
+                        <Text style={[styles.sheetOptionLabel, styles.sheetOptionLabelNeutral]}>
+                            Reabrir produção
+                        </Text>
+                    </Pressable>
+                ) : null}
                 <Pressable
                     style={({ pressed }) => [
                         styles.sheetOption,
@@ -73,6 +96,9 @@ const styles = StyleSheet.create({
         fontFamily: font.semiBold,
         fontSize: 16,
         color: colors.danger,
+    },
+    sheetOptionLabelNeutral: {
+        color: colors.ink,
     },
     sheetCancel: {
         fontFamily: font.semiBold,

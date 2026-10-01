@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useToast } from "@/components/ui/Toast";
 import { authedFetch } from "../../lib/authed-fetch";
 import { parseDecimal } from "@/lib/format";
-import { MaterialInput, ProductionAgulha, ProductionDetail, ProductionMaterial, ProductionNovelo, UpdateProductionInput, updateProductionSchema } from "@artesaos/validation";
+import { MaterialInput, ProductionAgulha, ProductionDetail, ProductionMaterial, ProductionNovelo, ProductionStatus, UpdateProductionInput, updateProductionSchema } from "@artesaos/validation";
 
 
 function toErrorMessage(error: unknown, fallback: string): string {
@@ -398,6 +398,36 @@ export function useProduction(id: string) {
         );
     }, [id]);
 
+    const setStatus = useCallback(
+        async (status: ProductionStatus) => {
+            if (!production || production.status === status) return;
+
+            const previous = production.status;
+
+            setProduction((prev) => (prev ? { ...prev, status } : prev));
+
+            try {
+                await save({ status });
+                toast.success(
+                    status === "concluido"
+                        ? "Produção finalizada"
+                        : "Produção reaberta"
+                );
+            } catch (error) {
+                setProduction((prev) =>
+                    prev ? { ...prev, status: previous } : prev
+                );
+                toast.error(
+                    toErrorMessage(
+                        error,
+                        "Erro ao alterar o status da produção"
+                    )
+                );
+            }
+        },
+        [production, save, toast]
+    );
+
     return {
         production,
         loading,
@@ -409,5 +439,6 @@ export function useProduction(id: string) {
         removeMaterial,
         pauseTimer,
         resetTimer,
+        setStatus,
     };
 }

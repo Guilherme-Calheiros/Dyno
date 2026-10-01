@@ -8,12 +8,14 @@ import { formatarTempo } from "@/lib/format";
 
 type Props = {
     tempoReal: number;
+    locked?: boolean;
     onPause: (tempoSessao: number) => Promise<void>;
     onReset: () => Promise<void>;
 };
 
 export default function ProductionTimer({
     tempoReal,
+    locked = false,
     onPause,
     onReset,
 }: Props) {
@@ -90,7 +92,7 @@ export default function ProductionTimer({
     );
 
     const handleStart = () => {
-        if (actionLoading || isRunningRef.current) {
+        if (locked || actionLoading || isRunningRef.current) {
             return;
         }
 
@@ -106,7 +108,7 @@ export default function ProductionTimer({
     };
 
     const handlePause = async () => {
-        if (actionLoading) {
+        if (locked || actionLoading) {
             return;
         }
 
@@ -120,7 +122,7 @@ export default function ProductionTimer({
     };
 
     const handleReset = async () => {
-        if (actionLoading || salvandoRef.current) {
+        if (locked || actionLoading || salvandoRef.current) {
             return;
         }
 
@@ -157,10 +159,10 @@ export default function ProductionTimer({
                         style={({ pressed }) => [
                             styles.resetButton,
                             pressed && styles.pressed,
-                            actionLoading && styles.disabled,
+                            (locked || actionLoading) && styles.disabled,
                         ]}
                         onPress={handleReset}
-                        disabled={actionLoading}
+                        disabled={locked || actionLoading}
                         accessibilityRole="button"
                         accessibilityLabel="Resetar cronômetro"
                     >
@@ -178,7 +180,9 @@ export default function ProductionTimer({
                     </Text>
 
                     <Text style={styles.status}>
-                        {running
+                        {locked
+                            ? "Concluída"
+                            : running
                             ? "Em Andamento"
                             : "Pausado"}
                     </Text>
@@ -189,17 +193,19 @@ export default function ProductionTimer({
                         style={({ pressed }) => [
                             styles.primaryButton,
                             pressed && styles.pressed,
-                            actionLoading && styles.disabled,
+                            (locked || actionLoading) && styles.disabled,
                         ]}
                         onPress={
                             running
                                 ? handlePause
                                 : handleStart
                         }
-                        disabled={actionLoading}
+                        disabled={locked || actionLoading}
                         accessibilityRole="button"
                         accessibilityLabel={
-                            running
+                            locked
+                                ? "Cronômetro bloqueado"
+                                : running
                                 ? "Pausar cronômetro"
                                 : "Iniciar cronômetro"
                         }
