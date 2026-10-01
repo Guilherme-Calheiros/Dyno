@@ -1,20 +1,13 @@
 import { Router } from "express";
-import { auth } from "../auth";
-import { fromNodeHeaders } from "better-auth/node";
 import { db } from "../db";
 import { agulhas } from "../db/schema/app";
+import { requireAuth } from "../middleware/requireAuth";
 
 const router = Router();
 
+router.use(requireAuth);
+
 router.get("/", async (req, res) => {
-    const session = await auth.api.getSession({
-        headers: fromNodeHeaders(req.headers),
-    });
-
-    if (!session?.user) {
-        return res.status(401).json({ error: "Não autorizado" });
-    }
-
     try {
         const data = await db
             .select()

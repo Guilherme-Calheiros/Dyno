@@ -1,25 +1,18 @@
 import { Router } from "express";
-import { auth } from "../auth";
-import { fromNodeHeaders } from "better-auth/node";
 import { db } from "../db";
 import { fotosProducao, producoes, producoesAgulhas, producoesMateriais, producoesNovelo, receitas } from "../db/schema/app";
 import { and, eq, sql } from "drizzle-orm";
 import { deleteObject, getObjectKeyFromUrl, isOurObject } from "../storage/r2.js";
 import { materialInputSchema, updateProductionSchema } from "@artesaos/validation";
+import { requireAuth } from "../middleware/requireAuth";
 
 const router = Router();
+
+router.use(requireAuth);
 
 const round2 = (value: number) => Math.round(value * 100) / 100;
 
 router.get("/", async (req, res) => {
-    const session = await auth.api.getSession({
-        headers: fromNodeHeaders(req.headers),
-    })
-
-    if (!session?.user){
-        return res.status(401).json({ error: "Não autorizado" });
-    }
-
     const productionData = await db
         .select({
             id: producoes.id,
@@ -38,27 +31,19 @@ router.get("/", async (req, res) => {
                 eq(fotosProducao.capa, true)
             )
         )
-        .where(eq(producoes.userId, session.user.id));
+        .where(eq(producoes.userId, res.locals.user.id));
 
     return res.json({ producoes: productionData })
 })
 
 router.post("/", async (req, res) => {
-    const session = await auth.api.getSession({
-        headers: fromNodeHeaders(req.headers),
-    })
-
-    if (!session?.user){
-        return res.status(401).json({ error: "Não autorizado" });
-    }
-
     try {
         const existingProductions = await db
             .select({
                 nome: producoes.nome,
             })
             .from(producoes)
-            .where(eq(producoes.userId, session.user.id));
+            .where(eq(producoes.userId, res.locals.user.id));
 
         const baseName = "Nova produção";
 
@@ -84,7 +69,7 @@ router.post("/", async (req, res) => {
             .insert(producoes)
             .values({
                 nome,
-                userId: session.user.id,
+                userId: res.locals.user.id,
                 status: "andamento",
                 tempoReal: 0,
                 iniciadoEm: new Date(),
@@ -104,14 +89,6 @@ router.post("/", async (req, res) => {
 })
 
 router.get("/:id", async (req, res) => {
-    const session = await auth.api.getSession({
-        headers: fromNodeHeaders(req.headers),
-    })
-
-    if (!session?.user){
-        return res.status(401).json({ error: "Não autorizado" });
-    }
-
     const id = Number(req.params.id);
 
     if (!Number.isInteger(id) || id <= 0) {
@@ -137,7 +114,7 @@ router.get("/:id", async (req, res) => {
             .where(
                 and(
                     eq(producoes.id, id),
-                    eq(producoes.userId, session.user.id)
+                    eq(producoes.userId, res.locals.user.id)
                 )
             );
 
@@ -182,14 +159,6 @@ router.get("/:id", async (req, res) => {
 })
 
 router.patch("/:id", async (req, res) => {
-    const session = await auth.api.getSession({
-        headers: fromNodeHeaders(req.headers),
-    })
-
-    if (!session?.user){
-        return res.status(401).json({ error: "Não autorizado" });
-    }
-
     const id = Number(req.params.id);
 
     if (!Number.isInteger(id) || id <= 0) {
@@ -219,7 +188,7 @@ router.patch("/:id", async (req, res) => {
             .where(
                 and(
                     eq(producoes.id, id),
-                    eq(producoes.userId, session.user.id)
+                    eq(producoes.userId, res.locals.user.id)
                 )
             )
             .returning()
@@ -241,14 +210,6 @@ router.patch("/:id", async (req, res) => {
 })
 
 router.delete("/:id", async (req, res) => {
-    const session = await auth.api.getSession({
-        headers: fromNodeHeaders(req.headers),
-    })
-
-    if (!session?.user){
-        return res.status(401).json({ error: "Não autorizado" });
-    }
-
     const id = Number(req.params.id);
 
     if (!Number.isInteger(id) || id <= 0) {
@@ -262,7 +223,7 @@ router.delete("/:id", async (req, res) => {
             .where(
                 and(
                     eq(producoes.id, id),
-                    eq(producoes.userId, session.user.id)
+                    eq(producoes.userId, res.locals.user.id)
                 )
             );
 
@@ -291,7 +252,7 @@ router.delete("/:id", async (req, res) => {
             .where(
                 and(
                     eq(producoes.id, id),
-                    eq(producoes.userId, session.user.id)
+                    eq(producoes.userId, res.locals.user.id)
                 )
             );
 
@@ -306,14 +267,6 @@ router.delete("/:id", async (req, res) => {
 })
 
 router.post("/:id/materiais", async (req, res) => {
-    const session = await auth.api.getSession({
-        headers: fromNodeHeaders(req.headers),
-    });
-
-    if (!session?.user) {
-        return res.status(401).json({ error: "Não autorizado" });
-    }
-
     const producaoId = Number(req.params.id);
 
     if (!Number.isInteger(producaoId) || producaoId <= 0) {
@@ -326,7 +279,7 @@ router.post("/:id/materiais", async (req, res) => {
         .where(
             and(
                 eq(producoes.id, producaoId),
-                eq(producoes.userId, session.user.id),
+                eq(producoes.userId, res.locals.user.id),
             )
         )
         .limit(1);
@@ -452,14 +405,6 @@ router.post("/:id/materiais", async (req, res) => {
 });
 
 router.patch("/:id/materiais", async (req, res) => {
-    const session = await auth.api.getSession({
-        headers: fromNodeHeaders(req.headers),
-    });
-
-    if (!session?.user) {
-        return res.status(401).json({ error: "Não autorizado" });
-    }
-
     const producaoId = Number(req.params.id);
 
     if (!Number.isInteger(producaoId) || producaoId <= 0) {
@@ -540,7 +485,7 @@ router.patch("/:id/materiais", async (req, res) => {
                         .where(
                             and(
                                 eq(producoes.id, producaoId),
-                                eq(producoes.userId, session.user.id)
+                                eq(producoes.userId, res.locals.user.id)
                             )
                         )
                         .returning({
@@ -612,7 +557,7 @@ router.patch("/:id/materiais", async (req, res) => {
                         .where(
                             and(
                                 eq(producoes.id, producaoId),
-                                eq(producoes.userId, session.user.id)
+                                eq(producoes.userId, res.locals.user.id)
                             )
                         )
                         .returning({
@@ -685,14 +630,6 @@ router.patch("/:id/materiais", async (req, res) => {
 });
 
 router.delete("/:id/materiais/", async (req, res) => {
-    const session = await auth.api.getSession({
-        headers: fromNodeHeaders(req.headers),
-    });
-
-    if (!session?.user) {
-        return res.status(401).json({ error: "Não autorizado" });
-    }
-
     const producaoId = Number(req.params.id);
     
 
@@ -713,7 +650,7 @@ router.delete("/:id/materiais/", async (req, res) => {
                 .where(
                     and(
                         eq(producoes.id, producaoId),
-                        eq(producoes.userId, session.user.id)
+                        eq(producoes.userId, res.locals.user.id)
                     )
                 )
                 .limit(1);
