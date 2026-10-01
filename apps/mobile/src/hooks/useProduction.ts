@@ -332,6 +332,72 @@ export function useProduction(id: string) {
         [id, toast]
     );
 
+    const pauseTimer = useCallback(
+        async (tempoSessao: number) => {
+            if (tempoSessao <= 0) {
+                return;
+            }
+
+            const response = await authedFetch(
+                `/api/productions/${id}/timer`,
+                {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        action: "add",
+                        tempo: tempoSessao,
+                    }),
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error("Erro ao salvar tempo");
+            }
+
+            const data = await response.json();
+
+            setProduction((prev) =>
+                prev
+                    ? {
+                        ...prev,
+                        tempoReal: data.tempoReal,
+                    }
+                    : prev
+            );
+        },
+        [id]
+    );
+
+    const resetTimer = useCallback(async () => {
+        const response = await authedFetch(
+            `/api/productions/${id}/timer`,
+            {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    action: "reset",
+                }),
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error("Erro ao resetar cronômetro");
+        }
+
+        setProduction((prev) =>
+            prev
+                ? {
+                    ...prev,
+                    tempoReal: 0,
+                }
+                : prev
+        );
+    }, [id]);
+
     return {
         production,
         loading,
@@ -341,5 +407,7 @@ export function useProduction(id: string) {
         addMaterial,
         editMaterial,
         removeMaterial,
+        pauseTimer,
+        resetTimer,
     };
 }

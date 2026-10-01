@@ -788,4 +788,97 @@ router.delete("/:id/materiais/", async (req, res) => {
     }
 });
 
+router.patch("/:id/timer", async (req, res) => {
+    const producaoId = Number(req.params.id);
+    const { action, tempo } = req.body;
+
+    if (!Number.isInteger(producaoId) || producaoId <= 0) {
+        return res.status(400).json({
+            error: "ID da produção inválido",
+        });
+    }
+
+    if (!["add", "reset"].includes(action)) {
+        return res.status(400).json({
+            error: "Ação inválida",
+        });
+    }
+
+    if (
+        action === "add" &&
+        (!Number.isInteger(tempo) || tempo < 0)
+    ) {
+        return res.status(400).json({
+            error: "Tempo inválido",
+        });
+    }
+
+    try {
+        return await db.transaction(async (tx) => {
+            const [producao] = await tx
+                .select({
+                    tempoReal: producoes.tempoReal,
+                })
+                .from(producoes)
+                .where(
+                    and(
+                        eq(producoes.id, producaoId),
+                        eq(producoes.userId, res.locals.user.id)
+                    )
+                )
+                .limit(1);
+
+            if (!producao) {
+                return res.status(404).json({
+                    error: "Produção não encontrada",
+                });
+            }
+
+            if (action === "add") {
+                const tempoReal = producao.tempoReal + tempo;
+
+                await tx
+                    .update(producoes)
+                    .set({
+                        tempoReal,
+                    })
+                    .where(
+                        and(
+                            eq(producoes.id, producaoId),
+                            eq(producoes.userId, res.locals.user.id)
+                        )
+                    );
+
+                return res.json({
+                    message: "Tempo adicionado",
+                    tempoReal,
+                });
+            }
+
+            await tx
+                .update(producoes)
+                .set({
+                    tempoReal: 0,
+                })
+                .where(
+                    and(
+                        eq(producoes.id, producaoId),
+                        eq(producoes.userId, res.locals.user.id)
+                    )
+                );
+
+            return res.json({
+                message: "Cronômetro resetado",
+                tempoReal: 0,
+            });
+        });
+    } catch (error) {
+        console.error(error);
+
+        return res.status(500).json({
+            error: "Erro no timer",
+        });
+    }
+});
+
 export default router;

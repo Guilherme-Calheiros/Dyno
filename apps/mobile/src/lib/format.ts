@@ -61,3 +61,13 @@ export function formatBRL(value: number | string | null | undefined): string {
         maximumFractionDigits: 2,
     });
 }
+
+export function formatarTempo(segundos: number){
+    const horas = Math.floor(segundos / 3600);
+    const minutos = Math.floor((segundos % 3600) / 60);
+    const segundosRestantes = segundos % 60;
+
+    return [horas, minutos, segundosRestantes]
+        .map((valor) => String(valor).padStart(2, "0"))
+        .join(":")
+}

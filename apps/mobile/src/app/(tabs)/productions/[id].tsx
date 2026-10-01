@@ -22,6 +22,7 @@ import { useProduction } from "@/hooks/useProduction";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import MaterialSheet, { EditingMaterial } from "@/components/material/MaterialSheet";
 import ProductionMaterialsCard from "@/components/productions/ProductionMaterialsCard";
+import ProductionTimer from "@/components/productions/ProductionTimer";
 
 export default function ProductionDetail() {
     const { id } = useLocalSearchParams<{ id: string }>();
@@ -29,7 +30,7 @@ export default function ProductionDetail() {
     const toast = useToast();
     const insets = useSafeAreaInsets();
 
-    const { production, loading, rename, saveDescription, saveValues, addMaterial, removeMaterial, editMaterial } =
+    const { production, loading, rename, saveDescription, saveValues, addMaterial, removeMaterial, editMaterial, pauseTimer, resetTimer } =
         useProduction(id);
 
     const [showActions, setShowActions] = useState(false);
@@ -88,6 +89,12 @@ export default function ProductionDetail() {
                             production={production}
                             loading={loading}
                             onSave={saveDescription}
+                        />
+
+                        <ProductionTimer
+                            tempoReal={production?.tempoReal ?? 0}
+                            onPause={pauseTimer}
+                            onReset={resetTimer}
                         />
 
                         <ProductionStatusCard
