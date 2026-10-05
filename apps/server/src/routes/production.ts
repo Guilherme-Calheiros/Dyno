@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "../db";
-import { fotosProducao, producoes, producoesAgulhas, producoesMateriais, producoesNovelo, receitas } from "../db/schema/app";
+import { fotosProducao, producoes, producoesAgulhas, producoesMateriais, producoesNovelo } from "../db/schema/app";
 import { and, eq, sql } from "drizzle-orm";
 import { deleteObject, getObjectKeyFromUrl, isOurObject } from "../storage/r2.js";
 import { materialInputSchema, updateProductionSchema } from "@artesaos/validation";
@@ -99,7 +99,6 @@ router.get("/:id", async (req, res) => {
         const [producao] = await db
             .select({
                 producao: producoes,
-                receitaNome: receitas.nome,
                 capa: fotosProducao.caminho,
             })
             .from(producoes)
@@ -110,7 +109,6 @@ router.get("/:id", async (req, res) => {
                     eq(fotosProducao.capa, true)
                 )
             )
-            .leftJoin(receitas, eq(receitas.id, producoes.receitaId))
             .where(
                 and(
                     eq(producoes.id, id),
@@ -142,7 +140,6 @@ router.get("/:id", async (req, res) => {
         return res.json({
             producao: {
                 ...producao.producao,
-                receitaNome: producao.receitaNome,
                 capa: producao.capa,
                 materiais,
                 novelos,

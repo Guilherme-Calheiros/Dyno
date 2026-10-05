@@ -18,7 +18,6 @@ export default function NewProductionSheet({
         <Sheet isOpen={isOpen} onClose={onClose}>
             <View style={styles.sheetContent}>
                 <Text style={styles.sheetTitle}>Nova produção</Text>
-                <Text style={styles.sheetSubtitle}>Como você quer começar</Text>
                 <Pressable
                     style={styles.sheetOption}
                     onPress={() => {
@@ -56,12 +55,6 @@ const styles = StyleSheet.create({
         fontFamily: font.bold,
         fontSize: 22,
         color: colors.ink,
-        textAlign: "center",
-    },
-    sheetSubtitle: {
-        fontFamily: font.regular,
-        fontSize: 14,
-        color: colors.inkSoft,
         textAlign: "center",
         marginBottom: 6,
     },

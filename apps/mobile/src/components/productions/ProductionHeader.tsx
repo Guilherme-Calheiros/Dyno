@@ -86,11 +86,6 @@ export default function ProductionHeader({
                     </>
                 )}
             </View>
-            <Text style={styles.headSub}>
-                {loading
-                    ? "Receita: —"
-                    : `Receita: ${production?.receitaNome ?? "Sem receita"}`}
-            </Text>
         </View>
     );
 }
@@ -126,10 +121,5 @@ const styles = StyleSheet.create({
         fontSize: 22,
         color: colors.ink,
         flexShrink: 1,
-    },
-    headSub: {
-        fontFamily: font.semiBold,
-        fontSize: 12,
-        color: colors.inkSoft,
     },
 });

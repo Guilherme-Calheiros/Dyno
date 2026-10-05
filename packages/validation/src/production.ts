@@ -88,9 +88,6 @@ export type ProductionAgulha = {
 };
 
 export type ProductionDetail = Production & {
-    receitaId?: number | null;
-    receitaNome?: string | null;
-
     materiais: ProductionMaterial[];
     novelos: ProductionNovelo[];
     agulhas: ProductionAgulha[];

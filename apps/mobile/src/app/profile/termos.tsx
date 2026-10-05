@@ -44,8 +44,8 @@ export default function Termos() {
                         <Text style={styles.heading}>2. Descrição do serviço</Text>
                         <Text style={styles.body}>
                             O Dyno é um aplicativo destinado ao gerenciamento de
-                            receitas, produções e controle de artesanato. O Aplicativo
-                            permite ao usuário organizar receitas, acompanhar
+                            produções e controle de artesanato. O Aplicativo
+                            permite ao usuário acompanhar
                             produções e gerenciar materiais.
                         </Text>
 
@@ -92,7 +92,7 @@ export default function Termos() {
                         <Text style={styles.heading}>6. Conteúdo do usuário</Text>
                         <Text style={styles.body}>
                             O usuário mantém a propriedade sobre os dados e conteúdos
-                            que insere no Aplicativo (receitas, produções, materiais).
+                            que insere no Aplicativo (produções, materiais).
                             Ao utilizar o Aplicativo, o usuário concede ao Dyno a
                             licença limitada de armazenar e exibir tais conteúdos
                             exclusivamente para fins de prestação do serviço.

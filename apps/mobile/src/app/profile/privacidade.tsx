@@ -81,7 +81,7 @@ export default function Privacidade() {
                             {"\u2022"} Exibição do perfil dentro do Aplicativo
                         </Text>
                         <Text style={styles.listItem}>
-                            {"\u2022"} Armazenamento de receitas, produções e
+                            {"\u2022"} Armazenamento de produções e
                             materiais do usuário
                         </Text>
                         <Text style={styles.listItem}>

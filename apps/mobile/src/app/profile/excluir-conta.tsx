@@ -63,7 +63,7 @@ export default function ExcluirConta() {
                     </View>
 
                     <Text style={styles.description}>
-                        Ao excluir sua conta, todos os seus dados, produções e receitas serão
+                        Ao excluir sua conta, todos os seus dados e produções serão
                         removidos permanentemente. Essa ação não pode ser desfeita.
                     </Text>
 
