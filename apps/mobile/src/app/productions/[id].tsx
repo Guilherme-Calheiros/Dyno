@@ -14,7 +14,6 @@ import ProductionValuesSheet from "@/components/productions/ProductionValuesShee
 import DetailHero from "@/components/ui/DetailHero";
 import ProductionHeader from "@/components/productions/ProductionHeader";
 import ProductionDescriptionCard from "@/components/productions/ProductionDescriptionCard";
-import ProductionStatusCard from "@/components/productions/ProductionStatusCard";
 import ProductionSummaryCard from "@/components/productions/ProductionSummaryCard";
 import { useToast } from "@/components/ui/Toast";
 import { authedFetch } from "../../../lib/authed-fetch";
@@ -114,11 +113,6 @@ export default function ProductionDetail() {
                             locked={isConcluida}
                             onPause={pauseTimer}
                             onReset={resetTimer}
-                        />
-
-                        <ProductionStatusCard
-                            production={production}
-                            loading={loading}
                         />
 
                         <ProductionMaterialsCard
