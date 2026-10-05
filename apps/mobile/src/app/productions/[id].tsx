@@ -17,7 +17,7 @@ import ProductionDescriptionCard from "@/components/productions/ProductionDescri
 import ProductionStatusCard from "@/components/productions/ProductionStatusCard";
 import ProductionSummaryCard from "@/components/productions/ProductionSummaryCard";
 import { useToast } from "@/components/ui/Toast";
-import { authedFetch } from "../../../../lib/authed-fetch";
+import { authedFetch } from "../../../lib/authed-fetch";
 import { useProduction } from "@/hooks/useProduction";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import MaterialSheet, { EditingMaterial } from "@/components/material/MaterialSheet";
@@ -82,7 +82,10 @@ export default function ProductionDetail() {
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
             >
                 <ScrollView
-                    contentContainerStyle={styles.scrollContent}
+                    contentContainerStyle={[
+                        styles.scrollContent,
+                        { paddingBottom: insets.bottom + 24 },
+                    ]}
                     keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
                 >
@@ -240,7 +243,6 @@ const styles = StyleSheet.create({
     },
     scrollContent: {
         flexGrow: 1,
-        paddingBottom: 24,
     },
     body: {
         paddingHorizontal: 20,

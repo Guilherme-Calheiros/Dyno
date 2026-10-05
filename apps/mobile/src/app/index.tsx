@@ -6,7 +6,8 @@ import { colors, font } from "@/theme/tokens";
 import SegmentedControl from "@/components/ui/SegmentedControl";
 import ProductionCard from "@/components/productions/ProductionCard";
 import NewProductionSheet from "@/components/productions/NewProductionSheet";
-import { authedFetch } from "../../../../lib/authed-fetch";
+import ProfileAvatarButton from "@/components/profile/ProfileAvatarButton";
+import { authedFetch } from "../../lib/authed-fetch";
 import { useFocusEffect, useRouter } from "expo-router";
 import { Production, ProductionStatus } from "@artesaos/validation";
 
@@ -61,7 +62,11 @@ export default function Productions() {
 
     return (
         <View style={[styles.container, { paddingTop: insets.top + 24 }]}>
-            <Text style={styles.title}>Produções</Text>
+            <View style={styles.header}>
+                <Text style={styles.title}>Produções</Text>
+
+                <ProfileAvatarButton onPress={() => router.push("/profile")} />
+            </View>
 
             <SegmentedControl
                 options={[
@@ -83,8 +88,10 @@ export default function Productions() {
             </View>
 
             <Pressable
-                style={[styles.fab, { bottom: insets.bottom }]}
+                style={[styles.fab, { bottom: insets.bottom + 16 }]}
                 onPress={() => setShowSheet(true)}
+                accessibilityRole="button"
+                accessibilityLabel="Nova produção"
             >
                 <FontAwesome5 name="plus" size={22} color="#ffffff" />
             </Pressable>
@@ -105,14 +112,22 @@ const styles = StyleSheet.create({
         backgroundColor: colors.bg,
         gap: 14,
     },
+    header: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 12,
+    },
     title: {
         fontFamily: font.semiBold,
         fontSize: 26,
         color: colors.ink,
+        flexShrink: 1,
     },
     list: {
         flex: 1,
         gap: 12,
+        paddingBottom: 88,
     },
     fab: {
         position: "absolute",

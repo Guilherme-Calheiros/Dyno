@@ -37,10 +37,16 @@ export default function RootLayout() {
             <ToastProvider>
                 <Stack screenOptions={{ headerShown: false }}>
                     <Stack.Protected guard={!!session}>
-                        <Stack.Screen
-                            name="(tabs)"
-                            options={{ headerShown: false }}
-                        />
+                        <Stack.Screen name="index" />
+                        <Stack.Screen name="productions/[id]" />
+                        <Stack.Screen name="profile/index" />
+                        <Stack.Screen name="profile/editar-perfil" />
+                        <Stack.Screen name="profile/preferencias" />
+                        <Stack.Screen name="profile/ajuda" />
+                        <Stack.Screen name="profile/seguranca" />
+                        <Stack.Screen name="profile/excluir-conta" />
+                        <Stack.Screen name="profile/privacidade" />
+                        <Stack.Screen name="profile/termos" />
                     </Stack.Protected>
 
                     <Stack.Protected guard={!session}>

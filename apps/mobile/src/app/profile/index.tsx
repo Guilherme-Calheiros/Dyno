@@ -3,7 +3,7 @@ import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { authClient } from "../../../../lib/auth-client";
+import { authClient } from "../../../lib/auth-client";
 import { useToast } from "@/components/ui/Toast";
 import { colors, font } from "@/theme/tokens";
 

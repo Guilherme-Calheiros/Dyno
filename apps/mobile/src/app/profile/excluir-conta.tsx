@@ -12,7 +12,7 @@ import { useRouter } from "expo-router";
 import BackButton from "@/components/ui/BackButton";
 import { useToast } from "@/components/ui/Toast";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
-import { authClient } from "../../../../lib/auth-client";
+import { authClient } from "../../../lib/auth-client";
 import { colors, font } from "@/theme/tokens";
 
 export default function ExcluirConta() {

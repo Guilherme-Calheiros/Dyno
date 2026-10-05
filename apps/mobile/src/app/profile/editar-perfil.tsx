@@ -17,10 +17,10 @@ import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import AvatarPicker from "@/components/profile/AvatarPicker";
 import { useToast } from "@/components/ui/Toast";
-import { authClient } from "../../../../lib/auth-client";
+import { authClient } from "../../../lib/auth-client";
 import { profileSchema } from "@/lib/validations";
 import { colors, font } from "@/theme/tokens";
-import { authedFetch } from "../../../../lib/authed-fetch";
+import { authedFetch } from "../../../lib/authed-fetch";
 
 type UpdatePayload = {
     name?: string;
