@@ -16,7 +16,7 @@ import Button from "@/components/ui/Button";
 import AvatarPicker from "@/components/profile/AvatarPicker";
 import { useToast } from "@/components/ui/Toast";
 import { authClient } from "../../../lib/auth-client";
-import { profileSchema } from "@/lib/validations";
+import { profileSchema } from "@artesaos/validation";
 import { uploadImage } from "@/lib/upload-image";
 import { colors, font } from "@/theme/tokens";
 import { authedFetch } from "../../../lib/authed-fetch";

@@ -41,7 +41,7 @@ export default function Profile() {
             await authClient.signOut({
                 fetchOptions: {
                     onSuccess: () => {
-                        router.reload();
+                        router.push("/");
                     },
                 },
             });

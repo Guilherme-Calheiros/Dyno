@@ -10,6 +10,9 @@ import {
   isOurObject,
   uploadBuffer,
 } from "../storage/r2.js";
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 async function migrateGoogleImage(userId: string, image?: string | null) {
   if (!image || isOurObject(image)) return image;
@@ -41,8 +44,46 @@ export const auth = betterAuth({
     expo(),
     emailOTP({
       async sendVerificationOTP({ email, otp, type }) {
-        // TODO: Integrar serviço de envio de e-mail (Resend, Nodemailer, etc.)
-        console.log(`[OTP] type=${type} email=${email} otp=${otp}`);
+        const { error } = await resend.emails.send({
+          from: process.env.RESEND_FROM_EMAIL!,
+          to: email,
+          subject:
+            type === "sign-in"
+              ? "Seu código de acesso ao Dyno"
+              : "Seu código de verificação do Dyno",
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto;">
+              <h1 style="color: #4b277a;">Dyno</h1>
+
+              <p>Seu código de verificação é:</p>
+
+              <div
+                style="
+                  font-size: 32px;
+                  font-weight: bold;
+                  letter-spacing: 8px;
+                  margin: 24px 0;
+                  color: #4b277a;
+                "
+              >
+                ${otp}
+              </div>
+
+              <p>
+                Esse código é válido por alguns minutos.
+              </p>
+
+              <p>
+                Se você não solicitou esse código, pode ignorar este e-mail.
+              </p>
+            </div>
+          `,
+        });
+
+        if (error) {
+          console.error("[OTP] falha ao enviar e-mail:", error);
+          throw new Error("Falha ao enviar código de verificação");
+        }
       },
     }),
   ],

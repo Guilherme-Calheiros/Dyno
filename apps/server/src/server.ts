@@ -27,7 +27,7 @@ app.get("/api/hello", (_req, res) => {
   res.json({ message: "Olá do server!" });
 });
 
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
 app.listen(PORT, () => {
   console.log(`Server rodando na porta ${PORT}`);

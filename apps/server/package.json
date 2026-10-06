@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
@@ -24,7 +25,9 @@
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
     "express": "^5.2.1",
-    "pg": "^8.23.0"
+    "pg": "^8.23.0",
+    "resend": "^6.32.0",
+    "tsx": "^4.23.12"
   },
   "devDependencies": {
     "@better-auth/cli": "1.4.21",
@@ -32,7 +35,6 @@
     "@types/express": "^5.0.6",
     "@types/node": "^26.2.0",
     "@types/pg": "^8.23.1",
-    "drizzle-kit": "^0.31.10",
-    "tsx": "^4.23.12"
+    "drizzle-kit": "^0.31.10"
   }
 }

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { profileSchema } from "../../../mobile/src/lib/validations";
+import { profileSchema } from "@artesaos/validation";
 import { db } from "../db";
 import { user } from "../db/schema/auth";
 import { eq } from "drizzle-orm";
