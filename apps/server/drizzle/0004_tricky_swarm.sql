@@ -1,0 +1,2 @@
+CREATE UNIQUE INDEX "fotos_producao_caminho_unique" ON "fotos_producao" USING btree ("caminho");--> statement-breakpoint
+CREATE UNIQUE INDEX "fotos_producao_capa_unique" ON "fotos_producao" USING btree ("producao_id") WHERE "fotos_producao"."capa" = true;

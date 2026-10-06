@@ -81,7 +81,7 @@ export default function Privacidade() {
                             {"\u2022"} Exibição do perfil dentro do Aplicativo
                         </Text>
                         <Text style={styles.listItem}>
-                            {"\u2022"} Armazenamento de receitas, produções e
+                            {"\u2022"} Armazenamento de produções e
                             materiais do usuário
                         </Text>
                         <Text style={styles.listItem}>
@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingHorizontal: 20,
         paddingBottom: 32,
-        backgroundColor: "#faf7fb",
+        backgroundColor: colors.bg,
         gap: 14,
     },
     header: {

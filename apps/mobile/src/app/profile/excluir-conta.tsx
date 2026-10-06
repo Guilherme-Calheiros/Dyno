@@ -12,7 +12,7 @@ import { useRouter } from "expo-router";
 import BackButton from "@/components/ui/BackButton";
 import { useToast } from "@/components/ui/Toast";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
-import { authClient } from "../../../../lib/auth-client";
+import { authClient } from "../../../lib/auth-client";
 import { colors, font } from "@/theme/tokens";
 
 export default function ExcluirConta() {
@@ -63,7 +63,7 @@ export default function ExcluirConta() {
                     </View>
 
                     <Text style={styles.description}>
-                        Ao excluir sua conta, todos os seus dados, produções e receitas serão
+                        Ao excluir sua conta, todos os seus dados e produções serão
                         removidos permanentemente. Essa ação não pode ser desfeita.
                     </Text>
 
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingHorizontal: 20,
         paddingBottom: 32,
-        backgroundColor: "#faf7fb",
+        backgroundColor: colors.bg,
         gap: 14,
     },
     header: {

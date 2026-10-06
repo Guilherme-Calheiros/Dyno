@@ -1,0 +1,14 @@
+{
+  "name": "@artesaos/validation",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./material": "./src/material.ts",
+    "./production": "./src/production.ts"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  }
+}

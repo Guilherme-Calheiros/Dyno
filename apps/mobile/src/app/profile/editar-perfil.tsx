@@ -9,18 +9,17 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { File } from "expo-file-system";
-import { fetch as expoFetch } from "expo/fetch";
 
 import BackButton from "@/components/ui/BackButton";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import AvatarPicker from "@/components/profile/AvatarPicker";
 import { useToast } from "@/components/ui/Toast";
-import { authClient } from "../../../../lib/auth-client";
+import { authClient } from "../../../lib/auth-client";
 import { profileSchema } from "@/lib/validations";
+import { uploadImage } from "@/lib/upload-image";
 import { colors, font } from "@/theme/tokens";
-import { authedFetch } from "../../../../lib/authed-fetch";
+import { authedFetch } from "../../../lib/authed-fetch";
 
 type UpdatePayload = {
     name?: string;
@@ -86,51 +85,12 @@ export default function EditarPerfil() {
     }
 
     async function uploadAvatar(foto: { uri: string; contentType: string }) {
-        console.log("CONTENT TYPE:", foto.contentType);
-        const presignResponse = await authedFetch("/api/storage/avatar/presign", {
-            method: "POST",
-            body: JSON.stringify({
-                contentType: foto.contentType,
-            }),
+        await uploadImage({
+            presignPath: "/api/storage/avatar/presign",
+            confirmPath: "/api/storage/avatar/confirm",
+            uri: foto.uri,
+            contentType: foto.contentType,
         });
-
-        if (!presignResponse.ok) {
-            const data = await presignResponse.json().catch(() => ({}));
-            console.log("PRESIGN STATUS:", presignResponse.status);
-            console.log("PRESIGN RESPONSE:", data);
-            throw new Error(data.error ?? "Erro ao preparar upload da foto");
-        }
-
-        const { uploadUrl, objectKey } = (await presignResponse.json()) as {
-            uploadUrl: string;
-            objectKey: string;
-        };
-
-        const file = new File(foto.uri);
-
-        const uploadResponse = await expoFetch(uploadUrl, {
-            method: "PUT",
-            body: file,
-            headers: {
-                "Content-Type": foto.contentType,
-            },
-        })
-
-        if (!uploadResponse.ok) {
-            throw new Error("Erro ao enviar foto para o servidor");
-        }
-
-        const confirmResponse = await authedFetch("/api/storage/avatar/confirm", {
-            method: "POST",
-            body: JSON.stringify({
-                objectKey,
-            }),
-        });
-
-        if (!confirmResponse.ok) {
-            const data = await confirmResponse.json().catch(() => ({}));
-            throw new Error(data.error ?? "Erro ao confirmar upload da foto");
-        }
     }
 
     async function removeAvatar() {
