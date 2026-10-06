@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { randomUUID } from "node:crypto";
 import { createUploadUrl, deleteObject, getObjectKeyFromUrl, getPublicUrl } from "../storage/r2.js";
+import { resolveImageExtension } from "../storage/imageTypes.js";
 import { db } from "../db/index.js";
 import { user } from "../db/schema/auth.js";
 import { eq } from "drizzle-orm";
@@ -10,20 +11,14 @@ const router = Router();
 
 router.use(requireAuth);
 
-const allowedContentTypes = {
-  "image/jpeg": "jpg",
-  "image/png": "png",
-  "image/webp": "webp",
-} as const;
-
 router.post("/avatar/presign", async (req, res) => {
-  const contentType = req.body.contentType;
+  const ext = resolveImageExtension(req.body.contentType);
 
-  if (typeof contentType !== "string" || !(contentType in allowedContentTypes)) {
+  if (!ext) {
     return res.status(400).json({ error: "Tipo de imagem não permitido" });
   }
 
-  const ext = allowedContentTypes[contentType as keyof typeof allowedContentTypes]
+  const contentType = req.body.contentType as string;
   const objectKey = `avatars/${res.locals.user.id}/${randomUUID()}.${ext}`;
 
   try {

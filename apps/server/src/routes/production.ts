@@ -1,9 +1,11 @@
 import { Router } from "express";
+import { randomUUID } from "node:crypto";
 import { db } from "../db";
 import { fotosProducao, producoes, producoesAgulhas, producoesMateriais, producoesNovelo } from "../db/schema/app";
-import { and, eq, sql } from "drizzle-orm";
-import { deleteObject, getObjectKeyFromUrl, isOurObject } from "../storage/r2.js";
-import { materialInputSchema, updateProductionSchema } from "@artesaos/validation";
+import { and, asc, count, eq, sql } from "drizzle-orm";
+import { createUploadUrl, deleteObject, getObjectKeyFromUrl, getPublicUrl, isOurObject } from "../storage/r2.js";
+import { allowedContentTypesMessage, resolveImageExtension } from "../storage/imageTypes.js";
+import { MAX_FOTOS_PRODUCAO, materialInputSchema, updateProductionSchema } from "@artesaos/validation";
 import { requireAuth } from "../middleware/requireAuth";
 
 const router = Router();
@@ -11,6 +13,49 @@ const router = Router();
 router.use(requireAuth);
 
 const round2 = (value: number) => Math.round(value * 100) / 100;
+
+async function findOwnedProduction(id: number, userId: string) {
+    const [producao] = await db
+        .select({ id: producoes.id })
+        .from(producoes)
+        .where(and(eq(producoes.id, id), eq(producoes.userId, userId)))
+        .limit(1);
+
+    return producao ?? null;
+}
+
+async function countFotos(producaoId: number) {
+    const [row] = await db
+        .select({ total: count() })
+        .from(fotosProducao)
+        .where(eq(fotosProducao.producaoId, producaoId));
+
+    return Number(row?.total ?? 0);
+}
+
+async function findCapa(producaoId: number) {
+    const [capa] = await db
+        .select({ caminho: fotosProducao.caminho })
+        .from(fotosProducao)
+        .where(and(eq(fotosProducao.producaoId, producaoId), eq(fotosProducao.capa, true)))
+        .limit(1);
+
+    return capa?.caminho ?? null;
+}
+
+async function listFotos(producaoId: number) {
+    return db
+        .select({
+            id: fotosProducao.id,
+            producaoId: fotosProducao.producaoId,
+            caminho: fotosProducao.caminho,
+            posicao: fotosProducao.posicao,
+            capa: fotosProducao.capa,
+        })
+        .from(fotosProducao)
+        .where(eq(fotosProducao.producaoId, producaoId))
+        .orderBy(asc(fotosProducao.posicao));
+}
 
 router.get("/", async (req, res) => {
     const productionData = await db
@@ -120,7 +165,7 @@ router.get("/:id", async (req, res) => {
             return res.status(404).json({ error: "Produção não encontrada" });
         }
 
-        const [materiais, novelos, agulhas] = await Promise.all([
+        const [materiais, novelos, agulhas, fotos] = await Promise.all([
             db
                 .select()
                 .from(producoesMateriais)
@@ -135,6 +180,8 @@ router.get("/:id", async (req, res) => {
                 .select()
                 .from(producoesAgulhas)
                 .where(eq(producoesAgulhas.producaoId, id)),
+
+            listFotos(id),
         ])
 
         return res.json({
@@ -144,6 +191,7 @@ router.get("/:id", async (req, res) => {
                 materiais,
                 novelos,
                 agulhas,
+                fotos,
             },
         })
     } catch (error) {
@@ -236,7 +284,7 @@ router.delete("/:id", async (req, res) => {
             .from(fotosProducao)
             .where(eq(fotosProducao.producaoId, id));
 
-        await Promise.all(
+        const results = await Promise.allSettled(
             fotos.map(async ({ caminho }) => {
                 if (!isOurObject(caminho)) return;
 
@@ -246,6 +294,15 @@ router.delete("/:id", async (req, res) => {
                 }
             })
         );
+
+        results.forEach((result, index) => {
+            if (result.status === "rejected") {
+                console.error(
+                    `Erro ao apagar objeto da foto ${index + 1} da produção ${id}:`,
+                    result.reason
+                );
+            }
+        });
 
         await db
             .delete(producoes)
@@ -878,6 +935,262 @@ router.patch("/:id/timer", async (req, res) => {
         return res.status(500).json({
             error: "Erro no timer",
         });
+    }
+});
+
+router.post("/:id/fotos/presign", async (req, res) => {
+    const producaoId = Number(req.params.id);
+
+    if (!Number.isInteger(producaoId) || producaoId <= 0) {
+        return res.status(400).json({ error: "ID inválido" });
+    }
+
+    const contentType = req.body.contentType;
+    const ext = resolveImageExtension(contentType);
+
+    if (!ext) {
+        return res.status(400).json({ error: allowedContentTypesMessage });
+    }
+
+    try {
+        const producao = await findOwnedProduction(producaoId, res.locals.user.id);
+
+        if (!producao) {
+            return res.status(404).json({ error: "Produção não encontrada" });
+        }
+
+        const total = await countFotos(producaoId);
+
+        if (total >= MAX_FOTOS_PRODUCAO) {
+            return res.status(409).json({
+                error: `Você pode ter no máximo ${MAX_FOTOS_PRODUCAO} fotos por produção`,
+            });
+        }
+
+        const objectKey = `producoes/${res.locals.user.id}/${producaoId}/${randomUUID()}.${ext}`;
+
+        const uploadUrl = await createUploadUrl(objectKey, contentType);
+
+        return res.json({
+            uploadUrl,
+            objectKey,
+            publicUrl: getPublicUrl(objectKey),
+        });
+    } catch (error) {
+        console.error("[fotos-presign] falha ao gerar URL de upload", error);
+
+        return res.status(500).json({ error: "Erro ao gerar URL de upload" });
+    }
+});
+
+router.post("/:id/fotos/confirm", async (req, res) => {
+    const producaoId = Number(req.params.id);
+
+    if (!Number.isInteger(producaoId) || producaoId <= 0) {
+        return res.status(400).json({ error: "ID inválido" });
+    }
+
+    const { objectKey } = req.body;
+
+    if (
+        typeof objectKey !== "string" ||
+        !objectKey.startsWith(`producoes/${res.locals.user.id}/${producaoId}/`)
+    ) {
+        return res.status(400).json({ error: "Chave de objeto inválida" });
+    }
+
+    const caminho = getPublicUrl(objectKey);
+
+    try {
+        const producao = await findOwnedProduction(producaoId, res.locals.user.id);
+
+        if (!producao) {
+            return res.status(404).json({ error: "Produção não encontrada" });
+        }
+
+        const [jaConfirmada] = await db
+            .select()
+            .from(fotosProducao)
+            .where(eq(fotosProducao.caminho, caminho))
+            .limit(1);
+
+        if (jaConfirmada) {
+            return res.json({
+                foto: jaConfirmada,
+                capa: await findCapa(producaoId),
+            });
+        }
+
+        const total = await countFotos(producaoId);
+
+        if (total >= MAX_FOTOS_PRODUCAO) {
+            if (isOurObject(caminho)) {
+                const orphanKey = getObjectKeyFromUrl(caminho);
+                if (orphanKey) {
+                    await deleteObject(orphanKey).catch((err) =>
+                        console.error("[fotos-confirm] falha ao descartar objeto órfão", err)
+                    );
+                }
+            }
+
+            return res.status(409).json({
+                error: `Você pode ter no máximo ${MAX_FOTOS_PRODUCAO} fotos por produção`,
+            });
+        }
+
+        const foto = await db.transaction(async (tx) => {
+            const [{ total: atual }] = await tx
+                .select({ total: count() })
+                .from(fotosProducao)
+                .where(eq(fotosProducao.producaoId, producaoId));
+
+            const [criada] = await tx
+                .insert(fotosProducao)
+                .values({
+                    producaoId,
+                    caminho,
+                    posicao: Number(atual),
+                    capa: Number(atual) === 0,
+                })
+                .returning();
+
+            return criada;
+        });
+
+        return res.status(201).json({
+            foto,
+            capa: await findCapa(producaoId),
+        });
+    } catch (error) {
+        console.error("[fotos-confirm] falha ao confirmar upload", error);
+
+        return res.status(500).json({ error: "Erro ao confirmar upload" });
+    }
+});
+
+router.patch("/:id/fotos/:fotoId", async (req, res) => {
+    const producaoId = Number(req.params.id);
+    const fotoId = Number(req.params.fotoId);
+
+    if (!Number.isInteger(producaoId) || producaoId <= 0) {
+        return res.status(400).json({ error: "ID inválido" });
+    }
+
+    if (!Number.isInteger(fotoId) || fotoId <= 0) {
+        return res.status(400).json({ error: "ID da foto inválido" });
+    }
+
+    if (req.body.capa !== true) {
+        return res.status(400).json({ error: "Informe a foto que deve ser a capa" });
+    }
+
+    try {
+        const producao = await findOwnedProduction(producaoId, res.locals.user.id);
+
+        if (!producao) {
+            return res.status(404).json({ error: "Produção não encontrada" });
+        }
+
+        const [foto] = await db
+            .select({ id: fotosProducao.id })
+            .from(fotosProducao)
+            .where(and(eq(fotosProducao.id, fotoId), eq(fotosProducao.producaoId, producaoId)))
+            .limit(1);
+
+        if (!foto) {
+            return res.status(404).json({ error: "Foto não encontrada" });
+        }
+
+        await db.transaction(async (tx) => {
+            await tx
+                .update(fotosProducao)
+                .set({ capa: false })
+                .where(eq(fotosProducao.producaoId, producaoId));
+
+            await tx
+                .update(fotosProducao)
+                .set({ capa: true })
+                .where(and(eq(fotosProducao.id, fotoId), eq(fotosProducao.producaoId, producaoId)));
+        });
+
+        return res.json({ capa: await findCapa(producaoId) });
+    } catch (error) {
+        console.error("Erro ao definir foto de capa:", error);
+
+        return res.status(500).json({ error: "Erro ao definir foto de capa" });
+    }
+});
+
+router.delete("/:id/fotos/:fotoId", async (req, res) => {
+    const producaoId = Number(req.params.id);
+    const fotoId = Number(req.params.fotoId);
+
+    if (!Number.isInteger(producaoId) || producaoId <= 0) {
+        return res.status(400).json({ error: "ID inválido" });
+    }
+
+    if (!Number.isInteger(fotoId) || fotoId <= 0) {
+        return res.status(400).json({ error: "ID da foto inválido" });
+    }
+
+    try {
+        const producao = await findOwnedProduction(producaoId, res.locals.user.id);
+
+        if (!producao) {
+            return res.status(404).json({ error: "Produção não encontrada" });
+        }
+
+        const [foto] = await db
+            .select({
+                id: fotosProducao.id,
+                caminho: fotosProducao.caminho,
+                capa: fotosProducao.capa,
+            })
+            .from(fotosProducao)
+            .where(and(eq(fotosProducao.id, fotoId), eq(fotosProducao.producaoId, producaoId)))
+            .limit(1);
+
+        if (!foto) {
+            return res.status(404).json({ error: "Foto não encontrada" });
+        }
+
+        if (isOurObject(foto.caminho)) {
+            const objectKey = getObjectKeyFromUrl(foto.caminho);
+
+            if (objectKey) {
+                await deleteObject(objectKey);
+            }
+        }
+
+        await db.transaction(async (tx) => {
+            await tx
+                .delete(fotosProducao)
+                .where(and(eq(fotosProducao.id, fotoId), eq(fotosProducao.producaoId, producaoId)));
+
+            if (foto.capa) {
+                const [proxima] = await tx
+                    .select({ id: fotosProducao.id })
+                    .from(fotosProducao)
+                    .where(eq(fotosProducao.producaoId, producaoId))
+                    .orderBy(asc(fotosProducao.posicao))
+                    .limit(1);
+
+                if (proxima) {
+                    await tx
+                        .update(fotosProducao)
+                        .set({ capa: true })
+                        .where(and(eq(fotosProducao.id, proxima.id), eq(fotosProducao.producaoId, producaoId)));
+                }
+            }
+        });
+
+        const [capa, fotos] = await Promise.all([findCapa(producaoId), listFotos(producaoId)]);
+
+        return res.json({ capa, fotos });
+    } catch (error) {
+        console.error("Erro ao excluir foto:", error);
+
+        return res.status(500).json({ error: "Erro ao excluir foto" });
     }
 });
 

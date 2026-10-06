@@ -1,12 +1,19 @@
 import { useCallback, useEffect, useState } from "react";
 import { useToast } from "@/components/ui/Toast";
 import { authedFetch } from "../../lib/authed-fetch";
+import { uploadImage } from "@/lib/upload-image";
 import { parseDecimal } from "@/lib/format";
-import { MaterialInput, ProductionAgulha, ProductionDetail, ProductionMaterial, ProductionNovelo, ProductionStatus, UpdateProductionInput, updateProductionSchema } from "@artesaos/validation";
+import { MaterialInput, ProductionAgulha, ProductionDetail, ProductionFoto, ProductionMaterial, ProductionNovelo, ProductionStatus, UpdateProductionInput, updateProductionSchema } from "@artesaos/validation";
 
 
 function toErrorMessage(error: unknown, fallback: string): string {
     return error instanceof Error ? error.message : fallback;
+}
+
+async function readApiError(response: Response, fallback: string) {
+    const data = await response.json().catch(() => ({}));
+
+    return data.error ?? fallback;
 }
 
 function addCost(current: string, added: string): string {
@@ -428,6 +435,162 @@ export function useProduction(id: string) {
         [production, save, toast]
     );
 
+    const uploadPhoto = useCallback(
+        async (uri: string, contentType: string) => {
+            const { confirm } = await uploadImage<{ foto: ProductionFoto; capa: string | null }>({
+                presignPath: `/api/productions/${id}/fotos/presign`,
+                confirmPath: `/api/productions/${id}/fotos/confirm`,
+                uri,
+                contentType,
+            });
+
+            setProduction((prev) =>
+                prev
+                    ? {
+                          ...prev,
+                          fotos: [...prev.fotos, confirm.foto].sort(
+                              (a, b) => a.posicao - b.posicao
+                          ),
+                          capa: confirm.capa,
+                      }
+                    : prev
+            );
+
+            toast.success("Foto adicionada");
+        },
+        [id, toast]
+    );
+
+    const setCover = useCallback(
+        async (fotoId: number) => {
+            if (!production) return;
+
+            const previousFotos = production.fotos;
+            const previousCapa = production.capa;
+
+            setProduction((prev) =>
+                prev
+                    ? {
+                          ...prev,
+                          capa:
+                              prev.fotos.find((foto) => foto.id === fotoId)
+                                  ?.caminho ?? prev.capa,
+                          fotos: prev.fotos.map((foto) => ({
+                              ...foto,
+                              capa: foto.id === fotoId,
+                          })),
+                      }
+                    : prev
+            );
+
+            try {
+                const response = await authedFetch(
+                    `/api/productions/${id}/fotos/${fotoId}`,
+                    {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ capa: true }),
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error(
+                        await readApiError(
+                            response,
+                            "Erro ao definir foto de capa"
+                        )
+                    );
+                }
+
+                const data = await response.json();
+
+                setProduction((prev) => (prev ? { ...prev, capa: data.capa } : prev));
+
+                toast.success("Foto de capa atualizada");
+            } catch (error) {
+                setProduction((prev) =>
+                    prev
+                        ? {
+                              ...prev,
+                              capa: previousCapa,
+                              fotos: previousFotos,
+                          }
+                        : prev
+                );
+
+                toast.error(
+                    toErrorMessage(error, "Erro ao definir foto de capa")
+                );
+            }
+        },
+        [id, production, toast]
+    );
+
+    const removePhoto = useCallback(
+        async (fotoId: number) => {
+            if (!production) return;
+
+            const previousFotos = production.fotos;
+            const previousCapa = production.capa;
+
+            setProduction((prev) =>
+                prev
+                    ? {
+                          ...prev,
+                          fotos: prev.fotos.filter((foto) => foto.id !== fotoId),
+                      }
+                    : prev
+            );
+
+            try {
+                const response = await authedFetch(
+                    `/api/productions/${id}/fotos/${fotoId}`,
+                    { method: "DELETE" }
+                );
+
+                if (!response.ok) {
+                    throw new Error(
+                        await readApiError(response, "Erro ao excluir foto")
+                    );
+                }
+
+                const data = (await response.json()) as {
+                    capa: string | null;
+                    fotos: ProductionFoto[];
+                };
+
+                const nextFotos = data.fotos ?? [];
+
+                setProduction((prev) =>
+                    prev
+                        ? {
+                              ...prev,
+                              capa: data.capa,
+                              fotos: nextFotos.length > 0 ? nextFotos : prev.fotos,
+                          }
+                        : prev
+                );
+
+                toast.success("Foto excluída");
+
+                return { capa: data.capa, fotos: nextFotos };
+            } catch (error) {
+                setProduction((prev) =>
+                    prev
+                        ? {
+                              ...prev,
+                              capa: previousCapa,
+                              fotos: previousFotos,
+                          }
+                        : prev
+                );
+
+                toast.error(toErrorMessage(error, "Erro ao excluir foto"));
+            }
+        },
+        [id, production, toast]
+    );
+
     return {
         production,
         loading,
@@ -440,5 +603,8 @@ export function useProduction(id: string) {
         pauseTimer,
         resetTimer,
         setStatus,
+        uploadPhoto,
+        setCover,
+        removePhoto,
     };
 }

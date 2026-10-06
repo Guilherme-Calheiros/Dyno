@@ -39,12 +39,14 @@
         "expo-image-picker",
         {
           "photosPermission": "Permita que o Dyno acesse suas fotos.",
+          "cameraPermission": "Permita que o Dyno use a câmera para fotografar suas peças.",
           "microphonePermission": false
         }
       ],
       "expo-font",
       "expo-secure-store",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-image"
     ],
     "experiments": {
       "typedRoutes": true

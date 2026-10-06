@@ -1,4 +1,5 @@
-import { ImageBackground, Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { ImageBackground } from "expo-image";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { colors } from "@/theme/tokens";
 
@@ -23,7 +24,9 @@ export default function DetailHero({
                 <ImageBackground
                     source={{ uri: cover ?? undefined }}
                     style={styles.heroFill}
-                    resizeMode="cover"
+                    imageStyle={styles.heroImage}
+                    contentFit="cover"
+                    transition={200}
                 />
             ) : (
                 <View style={[styles.heroFill, styles.heroPlaceholder]} />
@@ -67,6 +70,10 @@ const styles = StyleSheet.create({
     },
     heroFill: {
         ...StyleSheet.absoluteFill,
+    },
+    heroImage: {
+        width: "100%",
+        height: "100%",
     },
     heroPlaceholder: {
         backgroundColor: colors.primary,

@@ -4,6 +4,8 @@ export type ProductionStatus = "andamento" | "concluido";
 
 export type QuantidadeUnidade = "unidade" | "peso" | "comprimento";
 
+export const MAX_FOTOS_PRODUCAO = 10;
+
 export const updateProductionSchema = z
     .object({
         nome: z
@@ -87,7 +89,16 @@ export type ProductionAgulha = {
     agulhaId: number;
 };
 
+export type ProductionFoto = {
+    id: number;
+    producaoId: number;
+    caminho: string;
+    posicao: number;
+    capa: boolean;
+};
+
 export type ProductionDetail = Production & {
+    fotos: ProductionFoto[];
     materiais: ProductionMaterial[];
     novelos: ProductionNovelo[];
     agulhas: ProductionAgulha[];

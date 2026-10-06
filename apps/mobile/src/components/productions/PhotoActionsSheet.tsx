@@ -3,39 +3,41 @@ import Sheet from "@/components/ui/Sheet";
 import SheetOption from "@/components/ui/SheetOption";
 import sheetStyles from "@/components/ui/sheetStyles";
 
-type ProductionActionsSheetProps = {
+type PhotoActionsSheetProps = {
     isOpen: boolean;
     onClose: () => void;
+    onSetCover: () => void;
     onDelete: () => void;
-    onReabrir?: () => void;
+    isCover?: boolean;
 };
 
-export default function ProductionActionsSheet({
+export default function PhotoActionsSheet({
     isOpen,
     onClose,
+    onSetCover,
     onDelete,
-    onReabrir,
-}: ProductionActionsSheetProps) {
+    isCover = false,
+}: PhotoActionsSheetProps) {
     return (
         <Sheet isOpen={isOpen} onClose={onClose}>
             <View style={[sheetStyles.content, styles.content]}>
-                <Text style={sheetStyles.title}>Ações da produção</Text>
+                <Text style={sheetStyles.title}>Ações da foto</Text>
 
-                {onReabrir ? (
+                {isCover ? null : (
                     <SheetOption
-                        icon="undo"
-                        label="Reabrir produção"
+                        icon="star"
+                        label="Tornar capa"
                         tone="neutral"
                         onPress={() => {
                             onClose();
-                            onReabrir();
+                            onSetCover();
                         }}
                     />
-                ) : null}
+                )}
 
                 <SheetOption
                     icon="trash-alt"
-                    label="Excluir produção"
+                    label="Excluir foto"
                     onPress={() => {
                         onClose();
                         onDelete();

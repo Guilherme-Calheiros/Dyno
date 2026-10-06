@@ -1,5 +1,6 @@
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { FontAwesome5 } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { colors, font } from "@/theme/tokens";
 import { formatTime, formatDate } from "@/lib/format";
 import { Production } from "@artesaos/validation";
@@ -16,7 +17,12 @@ export default function ProductionCard({
     return (
         <Pressable style={styles.card} onPress={onPress}>
             {production.capa ? (
-                <Image source={{ uri: production.capa }} style={styles.cardImage} />
+                <Image
+                    source={{ uri: production.capa }}
+                    style={styles.cardImage}
+                    contentFit="cover"
+                    transition={200}
+                />
             ) : null}
             <View style={styles.cardContent}>
                 <View style={styles.cardTop}>

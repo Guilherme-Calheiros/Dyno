@@ -1,4 +1,5 @@
 import { relations } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import {
   pgTable,
   serial,
@@ -46,15 +47,24 @@ export const producoes = pgTable("producoes", {
   precoSugerido: decimal("preco_sugerido", { precision: 10, scale: 2 }),
 });
 
-export const fotosProducao = pgTable("fotos_producao", {
-  id: serial("id").primaryKey(),
-  producaoId: integer("producao_id")
-    .notNull()
-    .references(() => producoes.id, { onDelete: "cascade" }),
-  caminho: text("caminho").notNull(),
-  posicao: integer("posicao").notNull(),
-  capa: boolean("capa").notNull().default(false),
-});
+export const fotosProducao = pgTable(
+  "fotos_producao",
+  {
+    id: serial("id").primaryKey(),
+    producaoId: integer("producao_id")
+      .notNull()
+      .references(() => producoes.id, { onDelete: "cascade" }),
+    caminho: text("caminho").notNull(),
+    posicao: integer("posicao").notNull(),
+    capa: boolean("capa").notNull().default(false),
+  },
+  (t) => [
+    uniqueIndex("fotos_producao_caminho_unique").on(t.caminho),
+    uniqueIndex("fotos_producao_capa_unique")
+      .on(t.producaoId)
+      .where(sql`${t.capa} = true`),
+  ]
+);
 
 export const producoesMateriais = pgTable("producoes_materiais", {
   id: serial("id").primaryKey(),

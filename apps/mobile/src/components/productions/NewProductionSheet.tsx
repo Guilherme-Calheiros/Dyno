@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { FontAwesome5 } from "@expo/vector-icons";
 import Sheet from "@/components/ui/Sheet";
+import sheetStyles from "@/components/ui/sheetStyles";
 import { colors, font } from "@/theme/tokens";
 
 type NewProductionSheetProps = {
@@ -16,8 +17,8 @@ export default function NewProductionSheet({
 }: NewProductionSheetProps) {
     return (
         <Sheet isOpen={isOpen} onClose={onClose}>
-            <View style={styles.sheetContent}>
-                <Text style={styles.sheetTitle}>Nova produção</Text>
+            <View style={[sheetStyles.content, styles.content]}>
+                <Text style={sheetStyles.title}>Nova produção</Text>
                 <Pressable
                     style={styles.sheetOption}
                     onPress={() => {
@@ -36,7 +37,7 @@ export default function NewProductionSheet({
                     </View>
                 </Pressable>
                 <Pressable onPress={onClose}>
-                    <Text style={styles.sheetCancel}>Cancelar</Text>
+                    <Text style={sheetStyles.cancel}>Cancelar</Text>
                 </Pressable>
             </View>
         </Sheet>
@@ -44,19 +45,9 @@ export default function NewProductionSheet({
 }
 
 const styles = StyleSheet.create({
-    sheetContent: {
+    content: {
         alignItems: "center",
         gap: 6,
-        paddingTop: 22,
-        paddingHorizontal: 20,
-        paddingBottom: 24,
-    },
-    sheetTitle: {
-        fontFamily: font.bold,
-        fontSize: 22,
-        color: colors.ink,
-        textAlign: "center",
-        marginBottom: 6,
     },
     sheetOption: {
         flexDirection: "row",
@@ -90,12 +81,5 @@ const styles = StyleSheet.create({
         fontFamily: font.regular,
         fontSize: 13,
         color: colors.inkSoft,
-    },
-    sheetCancel: {
-        fontFamily: font.semiBold,
-        fontSize: 16,
-        color: colors.inkSoft,
-        textAlign: "center",
-        paddingVertical: 8,
     },
 });

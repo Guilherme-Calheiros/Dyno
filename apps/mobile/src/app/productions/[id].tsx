@@ -15,6 +15,7 @@ import DetailHero from "@/components/ui/DetailHero";
 import ProductionHeader from "@/components/productions/ProductionHeader";
 import ProductionDescriptionCard from "@/components/productions/ProductionDescriptionCard";
 import ProductionSummaryCard from "@/components/productions/ProductionSummaryCard";
+import ProductionPhotosSection from "@/components/productions/ProductionPhotosSection";
 import { useToast } from "@/components/ui/Toast";
 import { authedFetch } from "../../../lib/authed-fetch";
 import { useProduction } from "@/hooks/useProduction";
@@ -23,7 +24,9 @@ import MaterialSheet, { EditingMaterial } from "@/components/material/MaterialSh
 import ProductionMaterialsCard from "@/components/productions/ProductionMaterialsCard";
 import ProductionTimer from "@/components/productions/ProductionTimer";
 import Button from "@/components/ui/Button";
-import { ProductionStatus } from "@artesaos/validation";
+import { ProductionFoto, ProductionStatus } from "@artesaos/validation";
+
+const EMPTY_FOTOS: ProductionFoto[] = [];
 
 export default function ProductionDetail() {
     const { id } = useLocalSearchParams<{ id: string }>();
@@ -31,8 +34,22 @@ export default function ProductionDetail() {
     const toast = useToast();
     const insets = useSafeAreaInsets();
 
-    const { production, loading, rename, saveDescription, saveValues, addMaterial, removeMaterial, editMaterial, pauseTimer, resetTimer, setStatus } =
-        useProduction(id);
+    const {
+        production,
+        loading,
+        rename,
+        saveDescription,
+        saveValues,
+        addMaterial,
+        removeMaterial,
+        editMaterial,
+        pauseTimer,
+        resetTimer,
+        setStatus,
+        uploadPhoto,
+        setCover,
+        removePhoto,
+    } = useProduction(id);
 
     const [showActions, setShowActions] = useState(false);
     const [showValues, setShowValues] = useState(false);
@@ -41,9 +58,10 @@ export default function ProductionDetail() {
     const [deleting, setDeleting] = useState(false);
     const [pendingStatus, setPendingStatus] = useState<ProductionStatus | null>(null);
     const [changingStatus, setChangingStatus] = useState(false);
-    const [editingMaterial, setEditingMaterial] = useState<EditingMaterial | null>(null)
+    const [editingMaterial, setEditingMaterial] = useState<EditingMaterial | null>(null);
 
     const isConcluida = production?.status === "concluido";
+    const fotos = production?.fotos ?? EMPTY_FOTOS;
 
     const handleChangeStatus = async (status: ProductionStatus) => {
         setChangingStatus(true);
@@ -132,7 +150,15 @@ export default function ProductionDetail() {
                             onEdit={() => setShowValues(true)}
                         />
 
-                        { !isConcluida && (
+                        <ProductionPhotosSection
+                            fotos={fotos}
+                            loading={loading}
+                            uploadPhoto={uploadPhoto}
+                            setCover={setCover}
+                            removePhoto={removePhoto}
+                        />
+
+                        {!isConcluida && (
                             <Button
                                 label="Finalizar produção"
                                 variant="primary"
@@ -145,7 +171,7 @@ export default function ProductionDetail() {
                 </ScrollView>
             </KeyboardAvoidingView>
 
-            <MaterialSheet 
+            <MaterialSheet
                 isOpen={showMaterials}
                 onClose={() => {
                     setShowMaterials(false);
