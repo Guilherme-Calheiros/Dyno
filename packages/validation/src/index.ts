@@ -1,3 +1,3 @@
-export * from "./material.js";
-export * from "./production.js";
-export * from "./profile.js";
+export * from "./material";
+export * from "./production";
+export * from "./profile";
